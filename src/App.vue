@@ -4,9 +4,11 @@
     <v-main>
       <v-row no-gutters>
         <v-col cols="12">
-          <transition name="fade" mode="out-in">
-            <router-view />
-          </transition>
+          <router-view v-slot="{ Component }">
+            <transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </transition>
+          </router-view>
         </v-col>
       </v-row>
     </v-main>

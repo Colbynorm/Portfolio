@@ -43,22 +43,12 @@ const projects = [
     technologies: ['Vue 3', 'TypeScript', 'Vite', 'Tailwind'],
     route: '/weather',
   },
-  // {
-  //   title: 'Workout Tracker',
-  //   description: 'Log your WODs and PRs. Built for fellow Crossfitters',
-  //   technologies: ['Vue', 'Pinia', 'Vuetify', 'Firebase'],
-  //   github: 'https://github.com/Colbynorm/workout-tracker',
-  //   demo: '',
-  //   image: 'https://source.unsplash.com/400x200/?fitness',
-  // },
-  // {
-  //   title: 'KingBook',
-  //   description: 'A Stephen King reading list tracker for fans of The King',
-  //   technologies: ['Vue', 'Node.js', 'MongoDB'],
-  //   github: 'https://github.com/Colbynorm/kingbook',
-  //   demo: '',
-  //   image: 'https://source.unsplash.com/400x200/?books',
-  // },
+  {
+    title: 'Workout Tracker',
+    description: 'Log your WODs and PRs. Built for fellow Crossfitters',
+    technologies: ['Vue', 'Pinia', 'Vuetify', 'Firebase'],
+    route: '/workout',
+  },
 ]
 
 const goTo = (path: string) => {

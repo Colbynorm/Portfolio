@@ -23,6 +23,11 @@ const router = createRouter({
       name: 'weather',
       component: () => import('@/views/Weather.vue'),
     },
+    {
+      path: '/workout',
+      name: 'workout',
+      component: () => import('@/views/Workout.vue'),
+    },
   ],
 })
 

@@ -40,12 +40,7 @@
         </v-card>
       </v-dialog>
     </v-container>
-    <Snackbar
-      v-model="snackbarVisible"
-      :message="snackbarMessage"
-      :duration="5000"
-      :color="snackbarColor"
-    />
+    <Snackbar v-model="snackbarVisible" :message="snackbarMessage" :color="snackbarColor" />
   </div>
 </template>
 
@@ -93,18 +88,11 @@ const form = ref({
 
 const workouts = ref<WorkoutEntry[]>([])
 
-function logWorkout() {
-  const now = new Date().toLocaleString()
-  workouts.value.unshift({ ...form.value, timestamp: now })
-  form.value = { exercise: '', reps: 0, sets: 0, weight: 0 }
-}
-
 let nextId = 1 // Simple incremental ID
 
 function saveWorkout() {
   if (!form.value.name || !form.value.type || !form.value.date) {
     showSnackbar('Please fill in all required fields.', 'error')
-    alert('Please fill in all required fields.')
     return
   }
 
@@ -132,6 +120,15 @@ function saveWorkout() {
 </script>
 
 <style scoped>
+.workout-app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+
 .workout-logger {
   background: linear-gradient(135deg, #1e1e2f, #272742);
   border-radius: 16px;

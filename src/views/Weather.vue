@@ -28,12 +28,7 @@
         <p class="location">📍 {{ weather.city }}, {{ weather.country }}</p>
       </div>
     </v-container>
-    <Snackbar
-      v-model="snackbarVisible"
-      :message="snackbarMessage"
-      :duration="5000"
-      :color="snackbarColor"
-    />
+    <Snackbar v-model="snackbarVisible" :message="snackbarMessage" :color="snackbarColor" />
   </div>
 </template>
 

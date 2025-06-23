@@ -10,6 +10,8 @@
       <span v-else-if="props.color === 'warning'"></span>
       <span v-else></span>
       <span>{{ message }}</span>
+
+      <v-btn variant="text" @click="closeSnackbar" icon="mdi-close"></v-btn>
     </div>
   </transition>
 </template>
@@ -33,6 +35,13 @@ watch(
     visible.value = newVal
   },
 )
+
+const closeSnackbar = () => {
+  console.log(visible.value)
+  visible.value = false
+  emit('update:modelValue', false)
+  console.log(visible.value)
+}
 
 const bgColor = computed(() => {
   switch (props.color) {

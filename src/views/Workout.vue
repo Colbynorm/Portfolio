@@ -3,20 +3,24 @@
     <v-container>
       <v-btn color="primary" @click="dialog = true">+ Add Workout</v-btn>
       <v-list>
-        <v-list-item
-          v-for="workout in workouts"
-          :key="workout.id"
-          class="mb-2"
-          style="border-left: 5px solid #6c63ff"
-        >
-          <div class="workout-text">
-            <div class="workout-title">{{ workout.name }} 💪</div>
-            <div class="workout-subtitle">
-              {{ workout.type }} – {{ workout.duration }} min on
-              {{ new Date(workout.date).toLocaleString() }}
+        <h2 class="section-title">🏋️ My Workouts</h2>
+
+        <transition-group name="fade" tag="div">
+          <v-list-item
+            v-for="workout in workouts"
+            :key="workout.id"
+            class="mb-2"
+            style="border-left: 5px solid #6c63ff"
+          >
+            <div class="workout-text">
+              <div class="workout-title">{{ workout.name }} 💪</div>
+              <div class="workout-subtitle">
+                {{ workout.type }} – {{ workout.duration }} min on
+                {{ new Date(workout.date).toLocaleString() }}
+              </div>
             </div>
-          </div>
-        </v-list-item>
+          </v-list-item>
+        </transition-group>
       </v-list>
 
       <v-dialog v-model="dialog" max-width="500px" persistent>
@@ -47,6 +51,16 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import Snackbar from '@/components/Snackbar.vue'
+import { collection, addDoc, getDocs } from 'firebase/firestore'
+import { db } from '@/firebase'
+import { onMounted } from 'vue'
+
+onMounted(async () => {
+  const querySnapshot = await getDocs(collection(db, 'workouts'))
+  querySnapshot.forEach((doc) => {
+    workouts.value.push({ id: doc.id, ...doc.data() }as unknown as WorkoutEntry)
+  })
+})
 
 const snackbarVisible = ref(false)
 const snackbarMessage = ref('')
@@ -90,73 +104,113 @@ const workouts = ref<WorkoutEntry[]>([])
 
 let nextId = 1 // Simple incremental ID
 
-function saveWorkout() {
+async function saveWorkout() {
   if (!form.value.name || !form.value.type || !form.value.date) {
     showSnackbar('Please fill in all required fields.', 'error')
     return
   }
 
-  workouts.value.unshift({
-    id: nextId++,
+  const newWorkout = {
     name: form.value.name,
     type: form.value.type,
     duration: form.value.duration,
     date: form.value.date,
-  })
-
-  // Close dialog
-  dialog.value = false
-
-  // Reset form
-  form.value = {
-    name: '',
-    type: '',
-    duration: 0,
-    date: '',
+    createdAt: new Date().toISOString(),
   }
 
-  showSnackbar('Workout saved successfully!', 'success')
+  try {
+    await addDoc(collection(db, 'workouts'), newWorkout)
+    workouts.value.unshift({ ...newWorkout, id: Date.now() }) // Add to local list
+    dialog.value = false
+    showSnackbar('Workout saved to Firebase! ✅', 'success')
+    form.value = { name: '', type: '', duration: 0, date: '' }
+  } catch (err) {
+    showSnackbar('Error saving workout 💥', 'error')
+    console.error(err)
+  }
 }
+
 </script>
 
 <style scoped>
+.section-title {
+  font-size: 1.6rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #ff758c, #ff7eb3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .workout-app {
   min-height: 100vh;
+  padding: 3rem 1rem;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   display: flex;
   justify-content: center;
-  padding: 2rem;
   color: #fff;
   font-family: 'Segoe UI', sans-serif;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
 }
 
-.workout-logger {
-  background: linear-gradient(135deg, #1e1e2f, #272742);
+.v-btn {
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.v-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(108, 99, 255, 0.6);
+}
+
+.v-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
   border-radius: 16px;
-  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: #fff;
 }
 
-.glass-card {
-  backdrop-filter: blur(6px);
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid lime;
-  border-radius: 12px;
-  padding: 12px;
+.v-card-title {
+  font-weight: bold;
+  font-size: 1.3rem;
+  background: linear-gradient(90deg, #6c63ff, #a044ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .workout-text {
   display: flex;
   flex-direction: column;
   padding-left: 16px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.v-list-item:hover .workout-text {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .workout-title {
-  font-weight: bold;
+  font-weight: 600;
   font-size: 1.1rem;
-  color: #ffffff;
 }
 
 .workout-subtitle {
   font-size: 0.9rem;
-  color: #ccc;
+  color: #aaa;
 }
 </style>

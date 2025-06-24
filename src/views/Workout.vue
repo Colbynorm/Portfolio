@@ -3,7 +3,7 @@
     <v-container>
       <v-btn color="primary" @click="dialog = true">+ Add Workout</v-btn>
       <v-list>
-        <h2 class="section-title">🏋️ My Workouts</h2>
+        <h2 class="section-title">My Workouts</h2>
 
         <transition-group name="fade" tag="div">
           <v-list-item
@@ -12,11 +12,14 @@
             class="mb-2"
             style="border-left: 5px solid #6c63ff"
           >
-            <div class="workout-text">
-              <div class="workout-title">{{ workout.name }} 💪</div>
-              <div class="workout-subtitle">
-                {{ workout.type }} – {{ workout.duration }} min on
-                {{ new Date(workout.date).toLocaleString() }}
+            <div class="workout-item">
+              <v-icon :icon="getWorkoutIcon(workout.type)" size="28" class="workout-icon" />
+              <div class="workout-text">
+                <div class="workout-title">{{ workout.name }} 💪</div>
+                <div class="workout-subtitle">
+                  {{ workout.type }} – {{ workout.duration }} min on
+                  {{ new Date(workout.date).toLocaleString() }}
+                </div>
               </div>
             </div>
           </v-list-item>
@@ -61,6 +64,19 @@ onMounted(async () => {
     workouts.value.push({ id: doc.id, ...doc.data() } as unknown as WorkoutEntry)
   })
 })
+
+function getWorkoutIcon(type: string): string {
+  switch (type.toLowerCase()) {
+    case 'cardio':
+      return 'mdi-run-fast'
+    case 'strength':
+      return 'mdi-dumbbell'
+    case 'mobility':
+      return 'mdi-yoga'
+    default:
+      return 'mdi-help-circle-outline'
+  }
+}
 
 const snackbarVisible = ref(false)
 const snackbarMessage = ref('')
@@ -120,19 +136,33 @@ async function saveWorkout() {
 
   try {
     await addDoc(collection(db, 'workouts'), newWorkout)
-    workouts.value.unshift({ ...newWorkout, id: Date.now() }) // Add to local list
+    workouts.value.unshift({ ...newWorkout, id: Date.now() })
     dialog.value = false
-    showSnackbar('Workout saved to Firebase! ✅', 'success')
+    showSnackbar('Workout saved to Firebase!', 'success')
     form.value = { name: '', type: '', duration: 0, date: '' }
   } catch (err) {
-    showSnackbar('Error saving workout 💥', 'error')
+    showSnackbar('Error saving workout.', 'error')
     console.error(err)
   }
 }
-
 </script>
 
 <style scoped>
+.workout-item {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* space between icon and text */
+}
+
+.workout-icon {
+  flex-shrink: 0;
+}
+
+.workout-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .section-title {
   font-size: 1.6rem;
   font-weight: bold;

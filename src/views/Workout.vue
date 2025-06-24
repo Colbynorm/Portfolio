@@ -58,7 +58,7 @@ import { onMounted } from 'vue'
 onMounted(async () => {
   const querySnapshot = await getDocs(collection(db, 'workouts'))
   querySnapshot.forEach((doc) => {
-    workouts.value.push({ id: doc.id, ...doc.data() }as unknown as WorkoutEntry)
+    workouts.value.push({ id: doc.id, ...doc.data() } as unknown as WorkoutEntry)
   })
 })
 

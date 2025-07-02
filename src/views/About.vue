@@ -4,7 +4,7 @@
       <v-row align="center" justify="center">
         <v-col cols="12" md="8" class="text-center">
           <v-avatar size="120" class="mb-4 elevation-6">
-            <v-img href="@/src/assets/logo.svg" alt="Avatar" />
+            <v-img :src="logo" alt="Avatar" />
           </v-avatar>
           <h1 class="display-1 font-weight-bold text-white">Hey, I'm Colby!</h1>
           <p class="mt-3 subtitle-1 text-grey-lighten-3">
@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import logo from '@/assets/logo.svg'
 const skills = [
   { name: 'Vue 3', icon: 'mdi-vuejs' },
   { name: 'Vuetify', icon: 'mdi-vuetify' },

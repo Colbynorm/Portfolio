@@ -10,7 +10,7 @@
           View Projects
         </v-btn>
 
-        <v-btn outlined color="secondary" @click="$router.push('/contact')">
+        <v-btn outlined color="secondary" @click="$router.push('/about')">
           <v-icon left>mdi-email</v-icon>
           Get In Touch
         </v-btn>

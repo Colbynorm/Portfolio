@@ -9,6 +9,18 @@ onMounted(async () => {
         workouts.value.push({ id: doc.id, ...doc.data() });
     });
 });
+function getWorkoutIcon(type) {
+    switch (type.toLowerCase()) {
+        case 'cardio':
+            return 'mdi-run-fast';
+        case 'strength':
+            return 'mdi-dumbbell';
+        case 'mobility':
+            return 'mdi-yoga';
+        default:
+            return 'mdi-help-circle-outline';
+    }
+}
 const snackbarVisible = ref(false);
 const snackbarMessage = ref('');
 const snackbarColor = ref('info');
@@ -50,13 +62,13 @@ async function saveWorkout() {
     };
     try {
         await addDoc(collection(db, 'workouts'), newWorkout);
-        workouts.value.unshift({ ...newWorkout, id: Date.now() }); // Add to local list
+        workouts.value.unshift({ ...newWorkout, id: Date.now() });
         dialog.value = false;
-        showSnackbar('Workout saved to Firebase! ✅', 'success');
+        showSnackbar('Workout saved to Firebase!', 'success');
         form.value = { name: '', type: '', duration: 0, date: '' };
     }
     catch (err) {
-        showSnackbar('Error saving workout 💥', 'error');
+        showSnackbar('Error saving workout.', 'error');
         console.error(err);
     }
 }
@@ -65,6 +77,7 @@ const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['v-btn']} */ ;
+/** @type {__VLS_StyleScopedClasses['workout-text']} */ ;
 /** @type {__VLS_StyleScopedClasses['workout-text']} */ ;
 // CSS variable injection 
 // CSS variable injection end 
@@ -135,6 +148,22 @@ for (const [workout] of __VLS_getVForSourceType((__VLS_ctx.workouts))) {
     }, ...__VLS_functionalComponentArgsRest(__VLS_21));
     __VLS_23.slots.default;
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+        ...{ class: "workout-item" },
+    });
+    const __VLS_24 = {}.VIcon;
+    /** @type {[typeof __VLS_components.VIcon, typeof __VLS_components.vIcon, ]} */ ;
+    // @ts-ignore
+    const __VLS_25 = __VLS_asFunctionalComponent(__VLS_24, new __VLS_24({
+        icon: (__VLS_ctx.getWorkoutIcon(workout.type)),
+        size: "28",
+        ...{ class: "workout-icon" },
+    }));
+    const __VLS_26 = __VLS_25({
+        icon: (__VLS_ctx.getWorkoutIcon(workout.type)),
+        size: "28",
+        ...{ class: "workout-icon" },
+    }, ...__VLS_functionalComponentArgsRest(__VLS_25));
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "workout-text" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -151,158 +180,160 @@ for (const [workout] of __VLS_getVForSourceType((__VLS_ctx.workouts))) {
 }
 var __VLS_19;
 var __VLS_15;
-const __VLS_24 = {}.VDialog;
+const __VLS_28 = {}.VDialog;
 /** @type {[typeof __VLS_components.VDialog, typeof __VLS_components.vDialog, typeof __VLS_components.VDialog, typeof __VLS_components.vDialog, ]} */ ;
 // @ts-ignore
-const __VLS_25 = __VLS_asFunctionalComponent(__VLS_24, new __VLS_24({
+const __VLS_29 = __VLS_asFunctionalComponent(__VLS_28, new __VLS_28({
     modelValue: (__VLS_ctx.dialog),
     maxWidth: "500px",
     persistent: true,
 }));
-const __VLS_26 = __VLS_25({
+const __VLS_30 = __VLS_29({
     modelValue: (__VLS_ctx.dialog),
     maxWidth: "500px",
     persistent: true,
-}, ...__VLS_functionalComponentArgsRest(__VLS_25));
-__VLS_27.slots.default;
-const __VLS_28 = {}.VCard;
-/** @type {[typeof __VLS_components.VCard, typeof __VLS_components.vCard, typeof __VLS_components.VCard, typeof __VLS_components.vCard, ]} */ ;
-// @ts-ignore
-const __VLS_29 = __VLS_asFunctionalComponent(__VLS_28, new __VLS_28({}));
-const __VLS_30 = __VLS_29({}, ...__VLS_functionalComponentArgsRest(__VLS_29));
+}, ...__VLS_functionalComponentArgsRest(__VLS_29));
 __VLS_31.slots.default;
-const __VLS_32 = {}.VCardTitle;
-/** @type {[typeof __VLS_components.VCardTitle, typeof __VLS_components.vCardTitle, typeof __VLS_components.VCardTitle, typeof __VLS_components.vCardTitle, ]} */ ;
+const __VLS_32 = {}.VCard;
+/** @type {[typeof __VLS_components.VCard, typeof __VLS_components.vCard, typeof __VLS_components.VCard, typeof __VLS_components.vCard, ]} */ ;
 // @ts-ignore
 const __VLS_33 = __VLS_asFunctionalComponent(__VLS_32, new __VLS_32({}));
 const __VLS_34 = __VLS_33({}, ...__VLS_functionalComponentArgsRest(__VLS_33));
 __VLS_35.slots.default;
-var __VLS_35;
-const __VLS_36 = {}.VCardText;
-/** @type {[typeof __VLS_components.VCardText, typeof __VLS_components.vCardText, typeof __VLS_components.VCardText, typeof __VLS_components.vCardText, ]} */ ;
+const __VLS_36 = {}.VCardTitle;
+/** @type {[typeof __VLS_components.VCardTitle, typeof __VLS_components.vCardTitle, typeof __VLS_components.VCardTitle, typeof __VLS_components.vCardTitle, ]} */ ;
 // @ts-ignore
 const __VLS_37 = __VLS_asFunctionalComponent(__VLS_36, new __VLS_36({}));
 const __VLS_38 = __VLS_37({}, ...__VLS_functionalComponentArgsRest(__VLS_37));
 __VLS_39.slots.default;
-const __VLS_40 = {}.VTextField;
-/** @type {[typeof __VLS_components.VTextField, typeof __VLS_components.vTextField, ]} */ ;
+var __VLS_39;
+const __VLS_40 = {}.VCardText;
+/** @type {[typeof __VLS_components.VCardText, typeof __VLS_components.vCardText, typeof __VLS_components.VCardText, typeof __VLS_components.vCardText, ]} */ ;
 // @ts-ignore
-const __VLS_41 = __VLS_asFunctionalComponent(__VLS_40, new __VLS_40({
-    modelValue: (__VLS_ctx.form.name),
-    label: "Exercise Name",
-}));
-const __VLS_42 = __VLS_41({
-    modelValue: (__VLS_ctx.form.name),
-    label: "Exercise Name",
-}, ...__VLS_functionalComponentArgsRest(__VLS_41));
-const __VLS_44 = {}.VSelect;
-/** @type {[typeof __VLS_components.VSelect, typeof __VLS_components.vSelect, ]} */ ;
+const __VLS_41 = __VLS_asFunctionalComponent(__VLS_40, new __VLS_40({}));
+const __VLS_42 = __VLS_41({}, ...__VLS_functionalComponentArgsRest(__VLS_41));
+__VLS_43.slots.default;
+const __VLS_44 = {}.VTextField;
+/** @type {[typeof __VLS_components.VTextField, typeof __VLS_components.vTextField, ]} */ ;
 // @ts-ignore
 const __VLS_45 = __VLS_asFunctionalComponent(__VLS_44, new __VLS_44({
-    modelValue: (__VLS_ctx.form.type),
-    items: (['Cardio', 'Strength', 'Mobility']),
-    label: "Type",
+    modelValue: (__VLS_ctx.form.name),
+    label: "Exercise Name",
 }));
 const __VLS_46 = __VLS_45({
+    modelValue: (__VLS_ctx.form.name),
+    label: "Exercise Name",
+}, ...__VLS_functionalComponentArgsRest(__VLS_45));
+const __VLS_48 = {}.VSelect;
+/** @type {[typeof __VLS_components.VSelect, typeof __VLS_components.vSelect, ]} */ ;
+// @ts-ignore
+const __VLS_49 = __VLS_asFunctionalComponent(__VLS_48, new __VLS_48({
     modelValue: (__VLS_ctx.form.type),
     items: (['Cardio', 'Strength', 'Mobility']),
     label: "Type",
-}, ...__VLS_functionalComponentArgsRest(__VLS_45));
-const __VLS_48 = {}.VTextField;
-/** @type {[typeof __VLS_components.VTextField, typeof __VLS_components.vTextField, ]} */ ;
-// @ts-ignore
-const __VLS_49 = __VLS_asFunctionalComponent(__VLS_48, new __VLS_48({
-    modelValue: (__VLS_ctx.form.duration),
-    type: "number",
-    label: "Duration (min)",
 }));
 const __VLS_50 = __VLS_49({
-    modelValue: (__VLS_ctx.form.duration),
-    type: "number",
-    label: "Duration (min)",
+    modelValue: (__VLS_ctx.form.type),
+    items: (['Cardio', 'Strength', 'Mobility']),
+    label: "Type",
 }, ...__VLS_functionalComponentArgsRest(__VLS_49));
 const __VLS_52 = {}.VTextField;
 /** @type {[typeof __VLS_components.VTextField, typeof __VLS_components.vTextField, ]} */ ;
 // @ts-ignore
 const __VLS_53 = __VLS_asFunctionalComponent(__VLS_52, new __VLS_52({
+    modelValue: (__VLS_ctx.form.duration),
+    type: "number",
+    label: "Duration (min)",
+}));
+const __VLS_54 = __VLS_53({
+    modelValue: (__VLS_ctx.form.duration),
+    type: "number",
+    label: "Duration (min)",
+}, ...__VLS_functionalComponentArgsRest(__VLS_53));
+const __VLS_56 = {}.VTextField;
+/** @type {[typeof __VLS_components.VTextField, typeof __VLS_components.vTextField, ]} */ ;
+// @ts-ignore
+const __VLS_57 = __VLS_asFunctionalComponent(__VLS_56, new __VLS_56({
     modelValue: (__VLS_ctx.form.date),
     label: "Date/Time",
     type: "datetime-local",
 }));
-const __VLS_54 = __VLS_53({
+const __VLS_58 = __VLS_57({
     modelValue: (__VLS_ctx.form.date),
     label: "Date/Time",
     type: "datetime-local",
-}, ...__VLS_functionalComponentArgsRest(__VLS_53));
-var __VLS_39;
-const __VLS_56 = {}.VCardActions;
+}, ...__VLS_functionalComponentArgsRest(__VLS_57));
+var __VLS_43;
+const __VLS_60 = {}.VCardActions;
 /** @type {[typeof __VLS_components.VCardActions, typeof __VLS_components.vCardActions, typeof __VLS_components.VCardActions, typeof __VLS_components.vCardActions, ]} */ ;
-// @ts-ignore
-const __VLS_57 = __VLS_asFunctionalComponent(__VLS_56, new __VLS_56({}));
-const __VLS_58 = __VLS_57({}, ...__VLS_functionalComponentArgsRest(__VLS_57));
-__VLS_59.slots.default;
-const __VLS_60 = {}.VSpacer;
-/** @type {[typeof __VLS_components.VSpacer, typeof __VLS_components.vSpacer, ]} */ ;
 // @ts-ignore
 const __VLS_61 = __VLS_asFunctionalComponent(__VLS_60, new __VLS_60({}));
 const __VLS_62 = __VLS_61({}, ...__VLS_functionalComponentArgsRest(__VLS_61));
-const __VLS_64 = {}.VBtn;
+__VLS_63.slots.default;
+const __VLS_64 = {}.VSpacer;
+/** @type {[typeof __VLS_components.VSpacer, typeof __VLS_components.vSpacer, ]} */ ;
+// @ts-ignore
+const __VLS_65 = __VLS_asFunctionalComponent(__VLS_64, new __VLS_64({}));
+const __VLS_66 = __VLS_65({}, ...__VLS_functionalComponentArgsRest(__VLS_65));
+const __VLS_68 = {}.VBtn;
 /** @type {[typeof __VLS_components.VBtn, typeof __VLS_components.vBtn, typeof __VLS_components.VBtn, typeof __VLS_components.vBtn, ]} */ ;
 // @ts-ignore
-const __VLS_65 = __VLS_asFunctionalComponent(__VLS_64, new __VLS_64({
+const __VLS_69 = __VLS_asFunctionalComponent(__VLS_68, new __VLS_68({
     ...{ 'onClick': {} },
     color: "green",
 }));
-const __VLS_66 = __VLS_65({
+const __VLS_70 = __VLS_69({
     ...{ 'onClick': {} },
     color: "green",
-}, ...__VLS_functionalComponentArgsRest(__VLS_65));
-let __VLS_68;
-let __VLS_69;
-let __VLS_70;
-const __VLS_71 = {
+}, ...__VLS_functionalComponentArgsRest(__VLS_69));
+let __VLS_72;
+let __VLS_73;
+let __VLS_74;
+const __VLS_75 = {
     onClick: (__VLS_ctx.saveWorkout)
 };
-__VLS_67.slots.default;
-var __VLS_67;
-const __VLS_72 = {}.VBtn;
+__VLS_71.slots.default;
+var __VLS_71;
+const __VLS_76 = {}.VBtn;
 /** @type {[typeof __VLS_components.VBtn, typeof __VLS_components.vBtn, typeof __VLS_components.VBtn, typeof __VLS_components.vBtn, ]} */ ;
 // @ts-ignore
-const __VLS_73 = __VLS_asFunctionalComponent(__VLS_72, new __VLS_72({
+const __VLS_77 = __VLS_asFunctionalComponent(__VLS_76, new __VLS_76({
     ...{ 'onClick': {} },
 }));
-const __VLS_74 = __VLS_73({
+const __VLS_78 = __VLS_77({
     ...{ 'onClick': {} },
-}, ...__VLS_functionalComponentArgsRest(__VLS_73));
-let __VLS_76;
-let __VLS_77;
-let __VLS_78;
-const __VLS_79 = {
+}, ...__VLS_functionalComponentArgsRest(__VLS_77));
+let __VLS_80;
+let __VLS_81;
+let __VLS_82;
+const __VLS_83 = {
     onClick: (...[$event]) => {
         __VLS_ctx.dialog = false;
     }
 };
-__VLS_75.slots.default;
-var __VLS_75;
-var __VLS_59;
+__VLS_79.slots.default;
+var __VLS_79;
+var __VLS_63;
+var __VLS_35;
 var __VLS_31;
-var __VLS_27;
 var __VLS_3;
 /** @type {[typeof Snackbar, ]} */ ;
 // @ts-ignore
-const __VLS_80 = __VLS_asFunctionalComponent(Snackbar, new Snackbar({
+const __VLS_84 = __VLS_asFunctionalComponent(Snackbar, new Snackbar({
     modelValue: (__VLS_ctx.snackbarVisible),
     message: (__VLS_ctx.snackbarMessage),
     color: (__VLS_ctx.snackbarColor),
 }));
-const __VLS_81 = __VLS_80({
+const __VLS_85 = __VLS_84({
     modelValue: (__VLS_ctx.snackbarVisible),
     message: (__VLS_ctx.snackbarMessage),
     color: (__VLS_ctx.snackbarColor),
-}, ...__VLS_functionalComponentArgsRest(__VLS_80));
+}, ...__VLS_functionalComponentArgsRest(__VLS_84));
 /** @type {__VLS_StyleScopedClasses['workout-app']} */ ;
 /** @type {__VLS_StyleScopedClasses['section-title']} */ ;
 /** @type {__VLS_StyleScopedClasses['mb-2']} */ ;
+/** @type {__VLS_StyleScopedClasses['workout-item']} */ ;
+/** @type {__VLS_StyleScopedClasses['workout-icon']} */ ;
 /** @type {__VLS_StyleScopedClasses['workout-text']} */ ;
 /** @type {__VLS_StyleScopedClasses['workout-title']} */ ;
 /** @type {__VLS_StyleScopedClasses['workout-subtitle']} */ ;
@@ -311,6 +342,7 @@ const __VLS_self = (await import('vue')).defineComponent({
     setup() {
         return {
             Snackbar: Snackbar,
+            getWorkoutIcon: getWorkoutIcon,
             snackbarVisible: snackbarVisible,
             snackbarMessage: snackbarMessage,
             snackbarColor: snackbarColor,

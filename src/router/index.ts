@@ -28,6 +28,11 @@ const router = createRouter({
       name: 'workout',
       component: () => import('@/views/Workout.vue'),
     },
+    {
+      path: '/golfertracker',
+      name: 'golfertracker',
+      component: () => import('@/views/GolferTracker.vue'),
+    },
   ],
 })
 

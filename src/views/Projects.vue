@@ -45,9 +45,15 @@ const projects = [
   },
   {
     title: 'Workout Tracker',
-    description: 'Log your WODs and PRs. Built for fellow Crossfitters',
-    technologies: ['Vue', 'Pinia', 'Vuetify', 'Firebase'],
+    description: 'Log your WODs and PRs. Built for fellow Crossfitters.',
+    technologies: ['Vue 3', 'Pinia', 'Vuetify', 'Firebase'],
     route: '/workout',
+  },
+  {
+    title: 'Golfer Tracker',
+    description: 'Track your favorite golfers throughout the tournament.',
+    technologies: ['Vue 3', 'TypeScript'],
+    route: '/golfertracker',
   },
 ]
 

@@ -43,3 +43,5 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+For golf tracker... run node golf-proxy/index.js to get the server up and running.

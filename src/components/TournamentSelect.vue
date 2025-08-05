@@ -1,26 +1,20 @@
 <template>
   <div>
-    <label for="tournament" class="block font-semibold mb-1">Select Tournament</label>
-    <select
-      id="tournament"
-      class="w-full p-2 border rounded"
+    <v-select
       v-model="selected"
-      @change="emitSelection"
-    >
-      <option value="" disabled>Select one...</option>
-      <option
-        v-for="tourney in tournaments"
-        :key="tourney.TournamentID"
-        :value="tourney.TournamentID"
-      >
-        {{ tourney.Name }} ({{ tourney.StartDate ? tourney.StartDate.slice(0, 10) : 'TBD' }})
-      </option>
-    </select>
+      :items="items"
+      item-title="label"
+      item-value="value"
+      label="Select Tournament"
+      dense
+      outlined
+      @update:modelValue="emitSelection"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 interface Tournament {
@@ -31,11 +25,22 @@ interface Tournament {
   IsOver?: boolean
 }
 
-const selected = ref<number | ''>('')
+const selected = ref<number | null>(null)
+
+// raw tournaments from API
 const tournaments = ref<Tournament[]>([])
 
+// v-select expects an items array. map tournaments -> { label, value }
+const items = computed(() =>
+  tournaments.value.map((t) => ({
+    label: `${t.Name} (${t.StartDate ? t.StartDate.slice(0, 10) : 'TBD'})`,
+    value: t.TournamentID,
+    startDate: t.StartDate,
+  })),
+)
+
 const emit = defineEmits<{
-  (e: 'select', tournamentId: number | ''): void
+  (e: 'select', tournamentId: number | null): void
 }>()
 
 async function fetchTournaments() {
@@ -43,31 +48,28 @@ async function fetchTournaments() {
     const { data } = await axios.get('http://localhost:3001/tournaments')
     const today = new Date()
 
-    tournaments.value = (data || []).filter((t: Tournament) => {
-      // If no start date, skip it
-      if (!t.StartDate) return false
-
-      const start = new Date(t.StartDate)
-      const end = t.EndDate ? new Date(t.EndDate) : null
-
-      // keep future events (start >= today) or currently active (start <= today <= end)
-      const isFuture = start >= today
-      const isActive = start <= today && end !== null && end >= today
-      return isFuture || isActive
-    })
-
-    tournaments.value.sort((a, b) => {
-      const aStart = a.StartDate ? new Date(a.StartDate).getTime() : Number.POSITIVE_INFINITY
-      const bStart = b.StartDate ? new Date(b.StartDate).getTime() : Number.POSITIVE_INFINITY
-      return aStart - bStart
-    })
+    tournaments.value = (data || [])
+      .filter((t: Tournament) => {
+        if (!t.StartDate) return false
+        const start = new Date(t.StartDate)
+        const end = t.EndDate ? new Date(t.EndDate) : null
+        const isFuture = start >= today
+        const isActive = start <= today && end !== null && end >= today
+        return isFuture || isActive
+      })
+      .sort(
+        (a, b) =>
+          (a.StartDate ? +new Date(a.StartDate) : Infinity) -
+          (b.StartDate ? +new Date(b.StartDate) : Infinity),
+      )
   } catch (err) {
     console.error('Error fetching tournaments:', err)
   }
 }
 
-function emitSelection() {
-  emit('select', selected.value)
+function emitSelection(val: number | null) {
+  // selected is already updated by v-model, but we re-emit for parent
+  emit('select', val)
 }
 
 onMounted(fetchTournaments)

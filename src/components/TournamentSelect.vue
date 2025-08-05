@@ -29,10 +29,9 @@ interface Tournament {
   StartDate?: string
   EndDate?: string
   IsOver?: boolean
-  // add other fields you might use later (Venue, City, etc.)
 }
 
-const selected = ref<number | ''>('') // allow number or empty string
+const selected = ref<number | ''>('')
 const tournaments = ref<Tournament[]>([])
 
 const emit = defineEmits<{
@@ -43,9 +42,6 @@ async function fetchTournaments() {
   try {
     const { data } = await axios.get('http://localhost:3001/tournaments')
     const today = new Date()
-
-    // Debug log (optional)
-    // console.log('raw tournaments', data);
 
     tournaments.value = (data || []).filter((t: Tournament) => {
       // If no start date, skip it

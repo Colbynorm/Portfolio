@@ -13,7 +13,7 @@
         :key="tourney.TournamentID"
         :value="tourney.TournamentID"
       >
-        {{ tourney.Name }} ({{ tourney.StartDate.slice(0, 10) }})
+        {{ tourney.Name }} ({{ tourney.StartDate ? tourney.StartDate.slice(0, 10) : 'TBD' }})
       </option>
     </select>
   </div>
@@ -26,14 +26,17 @@ import axios from 'axios'
 interface Tournament {
   TournamentID: number
   Name: string
-  StartDate: string
+  StartDate?: string
+  EndDate?: string
+  IsOver?: boolean
+  // add other fields you might use later (Venue, City, etc.)
 }
 
-const selected = ref('')
+const selected = ref<number | ''>('') // allow number or empty string
 const tournaments = ref<Tournament[]>([])
 
 const emit = defineEmits<{
-  (e: 'select', tournamentId: string): void
+  (e: 'select', tournamentId: number | ''): void
 }>()
 
 async function fetchTournaments() {
@@ -41,16 +44,27 @@ async function fetchTournaments() {
     const { data } = await axios.get('http://localhost:3001/tournaments')
     const today = new Date()
 
-    console.log(tournaments)
+    // Debug log (optional)
+    // console.log('raw tournaments', data);
 
-    tournaments.value = data.filter((t: Tournament) => {
-      const endDate = new Date(t.EndDate)
-      return !t.IsOver || endDate >= today
+    tournaments.value = (data || []).filter((t: Tournament) => {
+      // If no start date, skip it
+      if (!t.StartDate) return false
+
+      const start = new Date(t.StartDate)
+      const end = t.EndDate ? new Date(t.EndDate) : null
+
+      // keep future events (start >= today) or currently active (start <= today <= end)
+      const isFuture = start >= today
+      const isActive = start <= today && end !== null && end >= today
+      return isFuture || isActive
     })
 
-    tournaments.value.sort(
-      (a, b) => new Date(a.StartDate).getTime() - new Date(b.StartDate).getTime(),
-    )
+    tournaments.value.sort((a, b) => {
+      const aStart = a.StartDate ? new Date(a.StartDate).getTime() : Number.POSITIVE_INFINITY
+      const bStart = b.StartDate ? new Date(b.StartDate).getTime() : Number.POSITIVE_INFINITY
+      return aStart - bStart
+    })
   } catch (err) {
     console.error('Error fetching tournaments:', err)
   }

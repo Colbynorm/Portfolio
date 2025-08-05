@@ -95,6 +95,55 @@ app.get('/tournaments', async (req, res) => {
   }
 })
 
+// add below your existing /tournaments route in index.js
+app.get('/tournament/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid tournament id' })
+
+  const headers = { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
+
+  try {
+    // Try CurrentSeason -> TournamentsBySeason first (if available)
+    try {
+      const currentSeasonRes = await axios.get(
+        'https://api.sportsdata.io/golf/v2/json/CurrentSeason',
+        headers,
+      )
+      const season = currentSeasonRes.data && currentSeasonRes.data.Season
+      if (season) {
+        const seasonTournamentsRes = await axios.get(
+          `https://api.sportsdata.io/golf/v2/json/TournamentsBySeason/${season}`,
+          headers,
+        )
+        const found = (seasonTournamentsRes.data || []).find((t) => Number(t.TournamentID) === id)
+        if (found) return res.json(found)
+      }
+    } catch (err) {
+      // ignore and fallback below; keep log for debugging
+      console.warn('/tournament primary flow failed:', err.message || err)
+    }
+
+    // Fallback: search the general Tournaments feed
+    try {
+      const allTournamentsRes = await axios.get(
+        'https://api.sportsdata.io/golf/v2/json/Tournaments',
+        headers,
+      )
+      const found = (allTournamentsRes.data || []).find((t) => Number(t.TournamentID) === id)
+      if (found) return res.json(found)
+
+      // not found
+      return res.status(404).json({ error: 'Tournament not found' })
+    } catch (err) {
+      console.error('Fallback tournaments call failed:', err.message || err)
+      return res.status(500).json({ error: 'Failed to fetch tournament' })
+    }
+  } catch (err) {
+    console.error('Error in /tournament/:id route:', err.message || err)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 app.listen(PORT, () => {
   console.log(`⛳ Golf proxy running on http://localhost:${PORT}`)
 })

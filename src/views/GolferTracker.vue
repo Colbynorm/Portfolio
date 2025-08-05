@@ -6,14 +6,20 @@
       <h1 class="text-xl font-bold mb-4">Golf Tracker (Test Mode)</h1>
       <TournamentSelect @select="onTournamentSelect" />
     </div>
+
+    <TournamentInfo :tournament-id="selectedTournament" @open-leaderboard="openLeaderboard" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import TournamentSelect from '@/components/TournamentSelect.vue'
-
+import TournamentInfo from '@/components/TournamentInfo.vue'
 const selectedTournament = ref<number | null>(null)
+
+function openLeaderboard(id: number) {
+  console.log('Open leaderboard for', id)
+}
 
 function onTournamentSelect(id: number | null) {
   selectedTournament.value = id

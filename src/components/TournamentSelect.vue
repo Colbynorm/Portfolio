@@ -58,7 +58,7 @@ async function fetchTournaments() {
         return isFuture || isActive
       })
       .sort(
-        (a, b) =>
+        (a: any, b: any) =>
           (a.StartDate ? +new Date(a.StartDate) : Infinity) -
           (b.StartDate ? +new Date(b.StartDate) : Infinity),
       )

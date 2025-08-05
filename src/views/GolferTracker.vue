@@ -34,15 +34,13 @@ import Leaderboard from '@/components/Leaderboard.vue'
 const selectedTournament = ref<number | null>(null)
 const selectedGolfer = ref<number | null>(null)
 
-// Handler matches the emitted type from TournamentSelect: number | ''
-function onTournamentSelect(id: number | '') {
+function onTournamentSelect(id: number | null) {
   // convert '' to null
-  selectedTournament.value = id === '' ? null : id
+  selectedTournament.value = id
   console.log('Selected Tournament ID:', selectedTournament.value)
-  selectedGolfer.value = null // reset on new tournament
+  selectedGolfer.value = null
 }
 
-// Handler for golfer — match whatever GolferSelect emits (number | '')
 function onGolferSelect(id: number | '') {
   selectedGolfer.value = id === '' ? null : id
 }

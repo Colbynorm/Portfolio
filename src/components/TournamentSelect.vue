@@ -27,10 +27,9 @@ interface Tournament {
 
 const selected = ref<number | null>(null)
 
-// raw tournaments from API
+//tournaments from API
 const tournaments = ref<Tournament[]>([])
 
-// v-select expects an items array. map tournaments -> { label, value }
 const items = computed(() =>
   tournaments.value.map((t) => ({
     label: `${t.Name} (${t.StartDate ? t.StartDate.slice(0, 10) : 'TBD'})`,
@@ -68,7 +67,6 @@ async function fetchTournaments() {
 }
 
 function emitSelection(val: number | null) {
-  // selected is already updated by v-model, but we re-emit for parent
   emit('select', val)
 }
 

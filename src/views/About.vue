@@ -39,7 +39,7 @@
               <v-btn
                 color="deep-purple accent-4"
                 dark
-                href="/assets/Colby_Norman_Resume.pdf"
+                href="/Portfolio/assets/Colby_Norman_Resume.pdf"
                 target="_blank"
                 rel="noopener"
                 prepend-icon="mdi-download"

@@ -26,15 +26,12 @@ interface Tournament {
 }
 
 const selected = ref<number | null>(null)
-
-//tournaments from API
 const tournaments = ref<Tournament[]>([])
 
 const items = computed(() =>
   tournaments.value.map((t) => ({
     label: `${t.Name} (${t.StartDate ? t.StartDate.slice(0, 10) : 'TBD'})`,
     value: t.TournamentID,
-    startDate: t.StartDate,
   })),
 )
 
@@ -44,10 +41,16 @@ const emit = defineEmits<{
 
 async function fetchTournaments() {
   try {
-    const { data } = await axios.get('http://localhost:3001/tournaments')
+    // Fetch tournaments and current live tournament in parallel
+    const [allTournamentsRes, currentTournamentRes] = await Promise.all([
+      axios.get('http://localhost:3001/tournaments'),
+      axios.get('http://localhost:3001/current-tournament').catch(() => null), // fallback if no current tournament
+    ])
+
     const today = new Date()
 
-    tournaments.value = (data || [])
+    // Filter upcoming and active tournaments
+    let filtered = (allTournamentsRes.data || [])
       .filter((t: Tournament) => {
         if (!t.StartDate) return false
         const start = new Date(t.StartDate)
@@ -57,10 +60,27 @@ async function fetchTournaments() {
         return isFuture || isActive
       })
       .sort(
-        (a: any, b: any) =>
+        (a: Tournament, b: Tournament) =>
           (a.StartDate ? +new Date(a.StartDate) : Infinity) -
           (b.StartDate ? +new Date(b.StartDate) : Infinity),
       )
+
+    // If current tournament is missing, add it at the front
+    const currentTournament = currentTournamentRes?.data
+    if (
+      currentTournament &&
+      !filtered.some((t: any) => t.TournamentID === currentTournament.TournamentID)
+    ) {
+      filtered.unshift(currentTournament)
+    }
+
+    tournaments.value = filtered
+
+    // Auto-select current tournament if available
+    if (currentTournament) {
+      selected.value = currentTournament.TournamentID
+      emit('select', selected.value)
+    }
   } catch (err) {
     console.error('Error fetching tournaments:', err)
   }

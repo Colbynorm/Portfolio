@@ -95,6 +95,45 @@ app.get('/tournaments', async (req, res) => {
   }
 })
 
+app.get('/current-tournament', async (req, res) => {
+  const headers = { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
+
+  try {
+    // Get current season first
+    const currentSeasonRes = await axios.get(
+      'https://api.sportsdata.io/golf/v2/json/CurrentSeason',
+      headers,
+    )
+    const season = currentSeasonRes.data?.Season
+    if (!season) {
+      return res.status(404).json({ error: 'No current season found' })
+    }
+
+    // Get tournaments for the season
+    const tournamentsRes = await axios.get(
+      `https://api.sportsdata.io/golf/v2/json/TournamentsBySeason/${season}`,
+      headers,
+    )
+
+    const today = new Date()
+    // Find the tournament currently in progress (active)
+    const currentTournament = (tournamentsRes.data || []).find((t) => {
+      const start = t.StartDate ? new Date(t.StartDate) : null
+      const end = t.EndDate ? new Date(t.EndDate) : null
+      return start && end && start <= today && end >= today
+    })
+
+    if (currentTournament) {
+      return res.json(currentTournament)
+    } else {
+      return res.status(404).json({ error: 'No current tournament in progress' })
+    }
+  } catch (err) {
+    console.error('Error fetching current tournament:', err.message || err)
+    return res.status(500).json({ error: 'Failed to fetch current tournament' })
+  }
+})
+
 // add below your existing /tournaments route in index.js
 app.get('/tournament/:id', async (req, res) => {
   const id = Number(req.params.id)

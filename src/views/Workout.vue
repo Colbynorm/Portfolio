@@ -195,10 +195,6 @@ async function saveWorkout() {
 .v-btn {
   font-weight: bold;
   letter-spacing: 1px;
-  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
 }
 
 .v-btn:hover {
@@ -207,11 +203,8 @@ async function saveWorkout() {
 }
 
 .v-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  color: #fff;
 }
 
 .v-card-title {

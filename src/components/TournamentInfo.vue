@@ -1,54 +1,62 @@
 <template>
-  <div v-if="loading" class="p-4 bg-white rounded shadow">Loading tournament…</div>
+  <div>
+    <!-- Loading -->
+    <v-card v-if="loading" class="pa-4" outlined> Loading tournament… </v-card>
 
-  <div v-else-if="error" class="p-4 bg-red-50 text-red-700 rounded">Error: {{ error }}</div>
+    <!-- Error -->
+    <v-card v-else-if="error" class="pa-4" color="red lighten-5" outlined>
+      <span class="red--text">Error: {{ error }}</span>
+    </v-card>
 
-  <div v-else-if="tournament" class="bg-white shadow-lg rounded-lg p-6">
-    <div class="flex items-start gap-4">
-      <div>
-        <h2 class="text-2xl font-bold">{{ tournament.Name }}</h2>
-        <p class="text-sm text-gray-500">
-          {{ venueLine }}
-        </p>
-        <p class="mt-2 text-sm">
-          <strong>Dates:</strong> {{ formatDate(tournament.StartDate) }} →
-          {{ formatDate(tournament.EndDate) }}
-          <span v-if="status" :class="statusClass" class="ml-3 font-semibold">{{ status }}</span>
-        </p>
-      </div>
-      <div class="ml-auto text-right space-y-1">
-        <p class="text-sm"><strong>Par:</strong> {{ tournament.Par ?? 'TBD' }}</p>
-        <p class="text-sm"><strong>Yards:</strong> {{ tournament.Yards ?? 'TBD' }}</p>
-        <p class="text-sm"><strong>Purse:</strong> {{ prettyPurse }}</p>
-        <p class="text-sm"><strong>Format:</strong> {{ tournament.Format ?? 'TBD' }}</p>
-      </div>
-    </div>
+    <!-- Tournament Info -->
+    <v-card v-else-if="tournament" class="pa-6" outlined>
+      <v-card-title class="d-flex justify-space-between align-start">
+        <div>
+          <div class="text-h5 font-weight-bold">{{ tournament.Name }}</div>
+          <div class="text-body-2 grey--text">{{ venueLine }}</div>
+          <div class="mt-2 text-body-2">
+            <strong>Dates:</strong>
+            {{ formatDate(tournament.StartDate) }} →
+            {{ formatDate(tournament.EndDate) }}
+            <span v-if="status" :class="statusClass" class="ml-3 font-weight-medium">
+              {{ status }}
+            </span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-body-2"><strong>Par:</strong> {{ tournament.Par ?? 'TBD' }}</div>
+          <div class="text-body-2"><strong>Yards:</strong> {{ tournament.Yards ?? 'TBD' }}</div>
+          <div class="text-body-2"><strong>Purse:</strong> {{ prettyPurse }}</div>
+          <div class="text-body-2"><strong>Format:</strong> {{ tournament.Format ?? 'TBD' }}</div>
+        </div>
+      </v-card-title>
 
-    <!-- Optional: rounds list, short description -->
-    <div v-if="tournament.Rounds?.length" class="mt-4">
-      <h3 class="font-semibold">Rounds</h3>
-      <ul class="list-disc ml-5 text-sm">
-        <li v-for="r in tournament.Rounds" :key="r.RoundID">
-          Round {{ r.Number }} — {{ formatDate(r.Day) }}
-        </li>
-      </ul>
-    </div>
+      <v-divider class="my-4"></v-divider>
 
-    <!-- Buttons / actions -->
-    <div class="mt-4 flex gap-2">
-      <button
-        @click="$emit('open-leaderboard', tournament.TournamentID)"
-        class="px-3 py-1 border rounded"
-      >
-        Open Leaderboard
-      </button>
-      <button v-if="tournament.IsInProgress" class="px-3 py-1 border rounded bg-green-50">
-        Live Mode
-      </button>
-    </div>
+      <!-- Rounds -->
+      <v-card-text v-if="tournament.Rounds?.length">
+        <div class="text-subtitle-2 font-weight-medium mb-2">Rounds</div>
+        <v-list dense>
+          <v-list-item v-for="r in tournament.Rounds" :key="r.RoundID">
+            Round {{ r.Number }} — {{ formatDate(r.Day) }}
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+
+      <!-- Actions -->
+      <v-card-actions>
+        <v-btn color="primary" @click="$emit('open-leaderboard', tournament.TournamentID)">
+          Open Leaderboard
+        </v-btn>
+        <v-btn v-if="tournament.IsInProgress" color="green lighten-3" text> Live Mode </v-btn>
+      </v-card-actions>
+    </v-card>
+
+    <!-- No Selection -->
+    <v-card v-else class="pa-4" outlined>
+      <span class="grey--text">No tournament selected</span>
+    </v-card>
   </div>
-
-  <div v-else class="p-4 text-gray-500">No tournament selected</div>
 </template>
 
 <script setup lang="ts">

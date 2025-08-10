@@ -23,9 +23,9 @@
           width="120"
           class="mx-auto mb-2"
         />
-        <h2 class="temp">{{ weather.temp }}°C</h2>
+        <h2 class="temp">{{ weather.temp }}°F</h2>
         <p class="desc">{{ weather.description }}</p>
-        <p class="location">📍 {{ weather.city }}, {{ weather.country }}</p>
+        <p class="location">📍 {{ weather.city }}, {{ weather.state }} {{ weather.country }}</p>
       </div>
     </v-container>
     <Snackbar v-model="snackbarVisible" :message="snackbarMessage" :color="snackbarColor" />
@@ -52,6 +52,7 @@ const weather = ref<null | {
   description: string
   icon: string
   city: string
+  state: string
   country: string
 }>(null)
 
@@ -63,25 +64,33 @@ const fetchWeather = async () => {
   loading.value = true
   try {
     const apiKey = '3910c585fac6f687c9543a7ed0717ea0'
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?q=${city.value}&appid=${apiKey}&units=metric`,
+    const geoRes = await fetch(
+      `http://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city.value)}&limit=1&appid=${apiKey}`,
     )
-    const data = await response.json()
+    const locations = await geoRes.json()
 
-    console.log(data)
+    console.log(locations)
 
-    if (data.cod !== 200) {
-      showSnackbar('There was an issue. ' + data.message, 'error')
-      weather.value = null
-    } else {
-      weather.value = {
-        temp: data.main.temp,
-        description: data.weather[0].description,
-        icon: data.weather[0].icon,
-        city: data.name,
-        country: data.sys.country,
-      }
-      showSnackbar('Successfully grabbed city!', 'success')
+    if (!locations.length) {
+      showSnackbar('City not found', 'error')
+      return
+    }
+
+    const { lat, lon, name, state, country } = locations[0]
+
+    // Then get the weather by coordinates:
+    const weatherRes = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`,
+    )
+    const data = await weatherRes.json()
+
+    weather.value = {
+      temp: data.main.temp,
+      description: data.weather[0].description,
+      icon: data.weather[0].icon,
+      city: name,
+      state: state,
+      country,
     }
   } catch (error) {
     console.error('Error fetching weather:', error)

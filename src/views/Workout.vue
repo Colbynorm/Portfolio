@@ -167,7 +167,6 @@ async function saveWorkout() {
   font-size: 1.6rem;
   font-weight: bold;
   background: linear-gradient(90deg, #ff758c, #ff7eb3);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 .fade-enter-active,
@@ -211,7 +210,6 @@ async function saveWorkout() {
   font-weight: bold;
   font-size: 1.3rem;
   background: linear-gradient(90deg, #6c63ff, #a044ff);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

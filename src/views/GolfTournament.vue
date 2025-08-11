@@ -1,13 +1,12 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto space-y-6">
-    <h1 class="text-2xl font-bold">Golf Tracker</h1>
+  <div>
+    <h1 class="p-6 mb-4">Golf Tournament Tracker</h1>
 
     <div class="p-6">
-      <h1 class="text-xl font-bold mb-4">Golf Tracker (Test Mode)</h1>
-      <TournamentSelect @select="onTournamentSelect" />
+      <TournamentSelect style="width: 30rem" @select="onTournamentSelect" />
     </div>
 
-    <TournamentInfo :tournament-id="selectedTournament" @open-leaderboard="openLeaderboard" />
+    <TournamentInfo :tournament-id="selectedTournament" />
   </div>
 </template>
 

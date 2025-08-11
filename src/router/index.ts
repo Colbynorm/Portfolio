@@ -29,9 +29,9 @@ const router = createRouter({
       component: () => import('@/views/Workout.vue'),
     },
     {
-      path: '/golfertracker',
-      name: 'golfertracker',
-      component: () => import('@/views/GolferTracker.vue'),
+      path: '/golftournament',
+      name: 'golftournament',
+      component: () => import('@/views/GolfTournament.vue'),
     },
   ],
 })

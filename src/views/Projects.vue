@@ -53,7 +53,7 @@ const projects = [
     title: 'Golfer Tracker',
     description: 'Track your favorite golfers throughout the tournament.',
     technologies: ['Vue 3', 'TypeScript', 'Axios', 'Express'],
-    route: '/golfertracker',
+    route: '/golftournament',
   },
 ]
 

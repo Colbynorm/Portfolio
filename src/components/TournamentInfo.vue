@@ -110,10 +110,6 @@ const props = defineProps<{
   tournamentId: number | null
 }>()
 
-const emit = defineEmits<{
-  (e: 'open-leaderboard', tournamentId: number): void
-}>()
-
 const tournament = ref<Tournament | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)

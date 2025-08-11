@@ -55,71 +55,38 @@ app.get('/tournaments', async (req, res) => {
   }
 })
 
-// GET /current-tournament — the one happening *right now*
-app.get('/current-tournament', async (req, res) => {
-  const headers = { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
-
-  try {
-    // Get current season
-    const currentSeasonRes = await axios.get(
-      'https://api.sportsdata.io/golf/v2/json/CurrentSeason',
-      headers,
-    )
-    const season = currentSeasonRes.data?.Season
-    if (!season) {
-      return res.status(404).json({ error: 'No current season found' })
-    }
-
-    // Get tournaments for the season
-    const tournamentsRes = await axios.get(
-      `https://api.sportsdata.io/golf/v2/json/TournamentsBySeason/${season}`,
-      headers,
-    )
-
-    const today = new Date()
-    const tournaments = tournamentsRes.data || []
-
-    // Find active tournament
-    let currentTournament = tournaments.find((t) => {
-      const start = t.StartDate ? new Date(t.StartDate) : null
-      const end = t.EndDate ? new Date(t.EndDate) : null
-      return start && end && start <= today && end >= today
-    })
-
-    // If none active, pick the soonest upcoming
-    if (!currentTournament) {
-      const upcoming = tournaments
-        .filter((t) => new Date(t.StartDate) > today)
-        .sort((a, b) => new Date(a.StartDate) - new Date(b.StartDate))
-      if (upcoming.length > 0) {
-        currentTournament = upcoming[0]
-      }
-    }
-
-    if (currentTournament) {
-      return res.json(currentTournament)
-    } else {
-      return res.status(404).json({ error: 'No current or upcoming tournament found' })
-    }
-  } catch (err) {
-    console.error('Error fetching current tournament:', err.message || err)
-    return res.status(500).json({ error: 'Failed to fetch current tournament' })
-  }
-})
-
 // GET /tournament/:id — find tournament by ID
 app.get('/tournament/:id', async (req, res) => {
   const id = Number(req.params.id)
   if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid tournament id' })
 
   try {
-    const resT = await safeGet('https://api.sportsdata.io/golf/v2/json/Tournaments')
-    const found = (resT.data || []).find((t) => Number(t.TournamentID) === id)
+    const response = await safeGet('https://api.sportsdata.io/golf/v2/json/Tournaments')
+    const found = (response.data || []).find((t) => Number(t.TournamentID) === id)
     if (!found) return res.status(404).json({ error: 'Tournament not found' })
-    res.json(found)
+    res.json(found) // <-- Express res here, no conflict
   } catch (err) {
     console.error('Error fetching tournament by ID:', err.message)
     res.status(500).json({ error: 'Failed to fetch tournament' })
+  }
+})
+
+// GET /leaderboard/:id - find leaderboard for selected tournament
+app.get('/leaderboard/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid tournament id' })
+
+  const headers = { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
+
+  try {
+    const response = await axios.get(
+      `https://api.sportsdata.io/golf/v2/json/LeaderboardBasic/${id}`,
+      headers,
+    )
+    res.json(response.data)
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error.message)
+    res.status(500).json({ error: 'Failed to fetch leaderboard' })
   }
 })
 

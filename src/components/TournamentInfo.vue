@@ -43,6 +43,31 @@
         </v-list>
       </v-card-text>
 
+      <!-- Leaderboard -->
+      <v-card outlined class="mt-6 pa-4">
+        <template v-if="loadingLeaderboard"> Loading leaderboard... </template>
+
+        <template v-else-if="leaderboardError">
+          <div class="red--text">{{ leaderboardError }}</div>
+        </template>
+
+        <template v-else-if="leaderboard.length">
+          <div class="text-subtitle-1 font-weight-bold mb-2">Leaderboard</div>
+          <v-list dense>
+            <v-list-item v-for="player in leaderboard" :key="player.PlayerID">
+              <v-list-item-title>{{ player.Name }}</v-list-item-title>
+              <v-list-item-subtitle
+                >Score: {{ player.Score }}, Position: {{ player.Position }}</v-list-item-subtitle
+              >
+            </v-list-item>
+          </v-list>
+        </template>
+
+        <template v-else>
+          <div>No leaderboard data available.</div>
+        </template>
+      </v-card>
+
       <!-- Actions -->
       <v-card-actions>
         <v-btn color="primary" @click="$emit('open-leaderboard', tournament.TournamentID)">
@@ -107,6 +132,41 @@ const fetchTournament = async (id: number) => {
     loading.value = false
   }
 }
+
+const leaderboard = ref<any[]>([])
+const loadingLeaderboard = ref(false)
+const leaderboardError = ref<string | null>(null)
+
+async function fetchLeaderboard(id: number) {
+  loadingLeaderboard.value = true
+  leaderboardError.value = null
+  leaderboard.value = []
+
+  try {
+    const { data } = await axios.get(`http://localhost:3001/leaderboard/${id}`)
+    leaderboard.value = data
+  } catch (err: any) {
+    console.error('Error fetching leaderboard:', err)
+    leaderboardError.value =
+      err?.response?.data?.error || err.message || 'Failed to load leaderboard'
+  } finally {
+    loadingLeaderboard.value = false
+  }
+}
+
+watch(
+  () => props.tournamentId,
+  (id) => {
+    if (id === null) {
+      leaderboard.value = []
+      leaderboardError.value = null
+      loadingLeaderboard.value = false
+      return
+    }
+    fetchLeaderboard(id)
+  },
+  { immediate: true },
+)
 
 watch(
   () => props.tournamentId,

@@ -44,35 +44,38 @@
       </v-card-text>
 
       <!-- Leaderboard -->
-      <v-card outlined class="mt-6 pa-4">
-        <template v-if="loadingLeaderboard"> Loading leaderboard... </template>
-
-        <template v-else-if="leaderboardError">
-          <div class="red--text">{{ leaderboardError }}</div>
-        </template>
-
-        <template v-else-if="leaderboard.length">
-          <div class="text-subtitle-1 font-weight-bold mb-2">Leaderboard</div>
-          <v-list dense>
-            <v-list-item v-for="player in leaderboard" :key="player.PlayerID">
-              <v-list-item-title>{{ player.Name }}</v-list-item-title>
-              <v-list-item-subtitle
-                >Score: {{ player.Score }}, Position: {{ player.Position }}</v-list-item-subtitle
-              >
-            </v-list-item>
-          </v-list>
-        </template>
-
-        <template v-else>
-          <div>No leaderboard data available.</div>
-        </template>
-      </v-card>
+      <v-dialog v-model="showLeaderboard" max-width="600">
+        <v-card>
+          <v-card-title class="headline">Leaderboard for {{ tournament?.Name }}</v-card-title>
+          <v-card-text>
+            <template v-if="loadingLeaderboard">Loading leaderboard...</template>
+            <template v-else-if="leaderboardError">
+              <div class="red--text">{{ leaderboardError }}</div>
+            </template>
+            <template v-else-if="leaderboard.length">
+              <v-list dense>
+                <v-list-item v-for="player in leaderboard" :key="player.PlayerID">
+                  <v-list-item-title>{{ player.Name }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    Score: {{ player.Score }}, Position: {{ player.Position }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+            </template>
+            <template v-else>
+              <div>No leaderboard data available.</div>
+            </template>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text @click="showLeaderboard = false">Close</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
 
       <!-- Actions -->
       <v-card-actions>
-        <v-btn color="primary" @click="$emit('open-leaderboard', tournament.TournamentID)">
-          Open Leaderboard
-        </v-btn>
+        <v-btn color="primary" @click="openLeaderboard"> Open Leaderboard </v-btn>
         <v-btn v-if="tournament.IsInProgress" color="green lighten-3" text> Live Mode </v-btn>
       </v-card-actions>
     </v-card>
@@ -109,6 +112,20 @@ interface Tournament {
 const props = defineProps<{
   tournamentId: number | null
 }>()
+
+const emit = defineEmits<{
+  (e: 'open-leaderboard', tournamentId: number): void
+}>()
+
+const showLeaderboard = ref(false)
+
+function openLeaderboard() {
+  if (tournament.value?.TournamentID) {
+    emit('open-leaderboard', tournament.value.TournamentID)
+    console.log(tournament.value.TournamentID)
+    showLeaderboard.value = true
+  }
+}
 
 const tournament = ref<Tournament | null>(null)
 const loading = ref(false)

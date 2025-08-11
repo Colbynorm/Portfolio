@@ -41,16 +41,17 @@ const emit = defineEmits<{
 
 async function fetchTournaments() {
   try {
-    // Fetch tournaments and current live tournament in parallel
-    const [allTournamentsRes, currentTournamentRes] = await Promise.all([
-      axios.get('http://localhost:3001/tournaments'),
-      axios.get('http://localhost:3001/current-tournament').catch(() => null), // fallback if no current tournament
-    ])
-
     const today = new Date()
 
+    const [allTournamentsRes] = await Promise.allSettled([
+      axios.get('http://localhost:3001/tournaments'),
+    ])
+
+    const allTournaments: Tournament[] =
+      allTournamentsRes.status === 'fulfilled' ? allTournamentsRes.value.data || [] : []
+
     // Filter upcoming and active tournaments
-    let filtered = (allTournamentsRes.data || [])
+    let filtered = allTournaments
       .filter((t: Tournament) => {
         if (!t.StartDate) return false
         const start = new Date(t.StartDate)
@@ -60,34 +61,23 @@ async function fetchTournaments() {
         return isFuture || isActive
       })
       .sort(
-        (a: Tournament, b: Tournament) =>
+        (a, b) =>
           (a.StartDate ? +new Date(a.StartDate) : Infinity) -
           (b.StartDate ? +new Date(b.StartDate) : Infinity),
       )
 
-    // If current tournament is missing, add it at the front
-    const currentTournament = currentTournamentRes?.data
-    if (
-      currentTournament &&
-      !filtered.some((t: any) => t.TournamentID === currentTournament.TournamentID)
-    ) {
-      filtered.unshift(currentTournament)
-    }
-
     tournaments.value = filtered
-
-    // Auto-select current tournament if available
-    if (currentTournament) {
-      selected.value = currentTournament.TournamentID
-      emit('select', selected.value)
-    }
   } catch (err) {
-    console.error('Error fetching tournaments:', err)
+    console.error('SafeFetch caught an error in fetchTournaments:', err)
   }
 }
 
 function emitSelection(val: number | null) {
-  emit('select', val)
+  try {
+    emit('select', val)
+  } catch (err) {
+    console.error('Emit error:', err)
+  }
 }
 
 onMounted(fetchTournaments)

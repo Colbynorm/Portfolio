@@ -9,86 +9,88 @@
     </v-card>
 
     <!-- Tournament Info -->
-    <v-card v-else-if="tournament" class="pa-6" outlined>
+    <v-card v-else-if="tournamentData" class="pa-6" outlined>
       <v-card-title class="d-flex justify-space-between align-start">
         <div>
-          <div class="text-h5 font-weight-bold">{{ tournament.Name }}</div>
+          <div class="text-h5 font-weight-bold">{{ tournamentData.Name }}</div>
           <div class="text-body-2 grey--text">{{ venueLine }}</div>
           <div class="mt-2 text-body-2">
             <strong>Dates:</strong>
-            {{ formatDate(tournament.StartDate) }} →
-            {{ formatDate(tournament.EndDate) }}
+            {{ formatDate(tournamentData.StartDate) }} →
+            {{ formatDate(tournamentData.EndDate) }}
             <span v-if="status" :class="statusClass" class="ml-3 font-weight-medium">
               {{ status }}
             </span>
           </div>
         </div>
         <div class="text-right">
-          <div class="text-body-2"><strong>Par:</strong> {{ tournament.Par ?? 'TBD' }}</div>
-          <div class="text-body-2"><strong>Yards:</strong> {{ tournament.Yards ?? 'TBD' }}</div>
+          <div class="text-body-2"><strong>Par:</strong> {{ tournamentData.Par ?? 'TBD' }}</div>
+          <div class="text-body-2"><strong>Yards:</strong> {{ tournamentData.Yards ?? 'TBD' }}</div>
           <div class="text-body-2"><strong>Purse:</strong> {{ prettyPurse }}</div>
-          <div class="text-body-2"><strong>Format:</strong> {{ tournament.Format ?? 'TBD' }}</div>
+          <div class="text-body-2">
+            <strong>Format:</strong> {{ tournamentData.Format ?? 'TBD' }}
+          </div>
         </div>
       </v-card-title>
 
-      <v-divider class="my-4"></v-divider>
+      <v-divider class="my-4" />
 
       <!-- Rounds -->
-      <v-card-text v-if="tournament.Rounds?.length">
+      <v-card-text v-if="tournamentData.Rounds?.length">
         <div class="text-subtitle-2 font-weight-medium mb-2">Rounds</div>
         <v-list dense>
-          <v-list-item v-for="r in tournament.Rounds" :key="r.RoundID">
+          <v-list-item v-for="r in tournamentData.Rounds" :key="r.RoundID">
             Round {{ r.Number }} — {{ formatDate(r.Day) }}
           </v-list-item>
         </v-list>
       </v-card-text>
 
-      <!-- Leaderboard -->
-      <v-dialog v-model="showLeaderboard" max-width="600">
-        <v-card>
-          <v-card-title class="headline">Leaderboard for {{ tournament?.Name }}</v-card-title>
-          <v-card-text>
-            <template v-if="loadingLeaderboard">Loading leaderboard...</template>
-            <template v-else-if="leaderboardError">
-              <div class="red--text">{{ leaderboardError }}</div>
-            </template>
-            <template v-else-if="leaderboard.length">
-              <v-list dense>
-                <v-list-item v-for="player in leaderboard" :key="player.PlayerID">
-                  <v-list-item-title>{{ player.Name }}</v-list-item-title>
-                  <v-list-item-subtitle>
-                    Score: {{ player.Score }}, Position: {{ player.Position }}
-                  </v-list-item-subtitle>
-                </v-list-item>
-              </v-list>
-            </template>
-            <template v-else>
-              <div>No leaderboard data available.</div>
-            </template>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn text @click="showLeaderboard = false">Close</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-
       <!-- Actions -->
       <v-card-actions>
-        <v-btn color="primary" @click="openLeaderboard"> Open Leaderboard </v-btn>
-        <v-btn v-if="tournament.IsInProgress" color="green lighten-3" text> Live Mode </v-btn>
+        <v-btn
+          v-if="tournamentData?.IsInProgress"
+          :color="liveMode ? 'red' : 'green'"
+          @click="toggleLiveMode"
+        >
+          {{ liveMode ? 'Stop Live Mode' : 'Start Live Mode' }}
+        </v-btn>
       </v-card-actions>
     </v-card>
 
-    <!-- No Selection -->
-    <v-card v-else class="pa-4" outlined>
-      <span class="grey--text">No tournament selected</span>
-    </v-card>
+    <!-- Leaderboard Dialog -->
+    <v-dialog v-model="showLeaderboard" max-width="600px" persistent>
+      <v-card>
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span>Leaderboard — {{ tournamentData?.Name }}</span>
+          <v-btn icon @click="stopLiveMode">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-divider />
+
+        <v-card-text>
+          <div v-if="loadingLeaderboard">Loading leaderboard…</div>
+          <div v-else-if="leaderboardError" class="red--text">Error: {{ leaderboardError }}</div>
+          <v-list v-else>
+            <v-list-item v-for="player in leaderboard" :key="player.PlayerID">
+              <v-list-item-title
+                >{{ player.Rank }} . {{ player.Name }} {{ player.TotalScore }}</v-list-item-title
+              >
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-btn text color="primary" @click="stopLiveMode">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 
 interface Tournament {
@@ -109,47 +111,48 @@ interface Tournament {
   Rounds?: Array<{ RoundID: number; Number?: number; Day?: string }>
 }
 
+interface LeaderboardEntry {
+  PlayerID: number
+  Rank: number
+  Name: string
+  TotalScore: string | number
+}
+
 const props = defineProps<{
   tournamentId: number | null
 }>()
 
-const emit = defineEmits<{
-  (e: 'open-leaderboard', tournamentId: number): void
-}>()
-
-const showLeaderboard = ref(false)
-
-function openLeaderboard() {
-  if (tournament.value?.TournamentID) {
-    emit('open-leaderboard', tournament.value.TournamentID)
-    console.log(tournament.value.TournamentID)
-    showLeaderboard.value = true
-  }
-}
-
-const tournament = ref<Tournament | null>(null)
+// State
+const tournamentData = ref<Tournament | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-const fetchTournament = async (id: number) => {
+const showLeaderboard = ref(false)
+const leaderboard = ref<LeaderboardEntry[]>([])
+const loadingLeaderboard = ref(false)
+const leaderboardError = ref<string | null>(null)
+
+const liveMode = ref(false)
+let liveInterval: ReturnType<typeof setInterval> | null = null
+
+// Fetch Tournament
+const fetchTournamentData = async (id: number) => {
   loading.value = true
   error.value = null
-  tournament.value = null
+  tournamentData.value = null
   try {
-    const { data } = await axios.get(`http://localhost:3001/tournament/${id}`)
-    tournament.value = data
+    const res = await fetch(`http://localhost:3001/tournament/${id}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    tournamentData.value = await res.json()
   } catch (err: any) {
-    console.error('fetchTournament error', err)
-    error.value = err?.response?.data?.error || err.message || 'Failed to load tournament'
+    console.error('Error fetching tournament:', err)
+    error.value = err.message || 'Failed to load tournament'
   } finally {
     loading.value = false
   }
 }
 
-const leaderboard = ref<any[]>([])
-const loadingLeaderboard = ref(false)
-const leaderboardError = ref<string | null>(null)
-
+// Fetch Leaderboard
 async function fetchLeaderboard(id: number) {
   loadingLeaderboard.value = true
   leaderboardError.value = null
@@ -157,7 +160,9 @@ async function fetchLeaderboard(id: number) {
 
   try {
     const { data } = await axios.get(`http://localhost:3001/leaderboard/${id}`)
-    leaderboard.value = data
+    // Grab just the Players array
+    leaderboard.value = data.Players ?? []
+    console.log(leaderboard.value)
   } catch (err: any) {
     console.error('Error fetching leaderboard:', err)
     leaderboardError.value =
@@ -167,34 +172,54 @@ async function fetchLeaderboard(id: number) {
   }
 }
 
+// Watchers
 watch(
   () => props.tournamentId,
   (id) => {
-    if (id === null) {
-      leaderboard.value = []
-      leaderboardError.value = null
-      loadingLeaderboard.value = false
-      return
-    }
-    fetchLeaderboard(id)
-  },
-  { immediate: true },
-)
-
-watch(
-  () => props.tournamentId,
-  (v) => {
-    if (v === null) {
-      tournament.value = null
+    if (id) {
+      fetchTournamentData(id)
+    } else {
+      tournamentData.value = null
       error.value = null
-      loading.value = false
-      return
     }
-    fetchTournament(v)
   },
   { immediate: true },
 )
 
+// Live Mode Toggle
+const toggleLiveMode = () => {
+  if (!tournamentData.value) return
+
+  liveMode.value = !liveMode.value
+
+  if (liveMode.value) {
+    // Open leaderboard and start polling
+    showLeaderboard.value = true
+    fetchLeaderboard(tournamentData.value.TournamentID)
+    liveInterval = setInterval(() => {
+      fetchLeaderboard(tournamentData.value!.TournamentID)
+    }, 30000)
+  } else {
+    // Stop polling
+    stopLiveMode()
+  }
+}
+
+const stopLiveMode = () => {
+  liveMode.value = false
+  showLeaderboard.value = false
+  if (liveInterval) {
+    clearInterval(liveInterval)
+    liveInterval = null
+  }
+}
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  if (liveInterval) clearInterval(liveInterval)
+})
+
+// Utils
 function formatDate(dt?: string) {
   if (!dt) return 'TBD'
   return new Date(dt).toLocaleDateString(undefined, {
@@ -205,30 +230,27 @@ function formatDate(dt?: string) {
 }
 
 const venueLine = computed(() => {
-  if (!tournament.value) return ''
-  const t = tournament.value
-  const parts = [t.Venue, t.City, t.State || t.Country].filter(Boolean)
-  return parts.join(' — ')
+  if (!tournamentData.value) return ''
+  const t = tournamentData.value
+  return [t.Venue, t.City, t.State || t.Country].filter(Boolean).join(' — ')
 })
 
 const status = computed(() => {
-  if (!tournament.value) return ''
-  if (tournament.value.IsInProgress) return 'In Progress'
-  if (tournament.value.IsOver) return 'Completed'
+  if (!tournamentData.value) return ''
+  if (tournamentData.value.IsInProgress) return 'In Progress'
+  if (tournamentData.value.IsOver) return 'Completed'
   return 'Upcoming'
 })
 
 const statusClass = computed(() => {
-  if (!tournament.value) return ''
-  if (tournament.value.IsInProgress) return 'text-green-600'
-  if (tournament.value.IsOver) return 'text-gray-500'
+  if (!tournamentData.value) return ''
+  if (tournamentData.value.IsInProgress) return 'text-green-600'
+  if (tournamentData.value.IsOver) return 'text-gray-500'
   return 'text-blue-600'
 })
 
 const prettyPurse = computed(() => {
-  if (!tournament.value?.Purse) return 'TBD'
-  return `$${Number(tournament.value.Purse).toLocaleString()}`
+  if (!tournamentData.value?.Purse) return 'TBD'
+  return `$${Number(tournamentData.value.Purse).toLocaleString()}`
 })
 </script>
-
-<style scoped></style>

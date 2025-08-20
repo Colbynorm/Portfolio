@@ -6,12 +6,7 @@
         <h2 class="section-title">My Workouts</h2>
 
         <transition-group name="fade" tag="div">
-          <v-list-item
-            v-for="workout in workouts"
-            :key="workout.id"
-            class="mb-2"
-            style="border-left: 5px solid #6c63ff"
-          >
+          <v-list-item v-for="workout in workouts" :key="workout.id" class="mb-2 workout-card">
             <div class="workout-item">
               <v-icon :icon="getWorkoutIcon(workout.type)" size="28" class="workout-icon" />
               <div class="workout-text">
@@ -20,6 +15,14 @@
                   {{ workout.type }} – {{ workout.duration }} min on
                   {{ new Date(workout.date).toLocaleString() }}
                 </div>
+              </div>
+              <div class="workout-actions">
+                <v-btn icon @click="editWorkout(workout)">
+                  <v-icon icon="mdi-pencil" />
+                </v-btn>
+                <v-btn icon color="red" @click="deleteWorkout(workout.id)">
+                  <v-icon icon="mdi-delete" />
+                </v-btn>
               </div>
             </div>
           </v-list-item>
@@ -52,18 +55,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import Snackbar from '@/components/Snackbar.vue'
-import { collection, addDoc, getDocs } from 'firebase/firestore'
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase'
-import { onMounted } from 'vue'
-
-onMounted(async () => {
-  const querySnapshot = await getDocs(collection(db, 'workouts'))
-  querySnapshot.forEach((doc) => {
-    workouts.value.push({ id: doc.id, ...doc.data() } as unknown as WorkoutEntry)
-  })
-})
 
 function getWorkoutIcon(type: string): string {
   switch (type.toLowerCase()) {
@@ -89,7 +84,7 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' | 'wa
 }
 
 interface WorkoutEntry {
-  id: number
+  id: string
   name: string
   type: string
   duration: number
@@ -97,17 +92,7 @@ interface WorkoutEntry {
 }
 
 const dialog = ref(false)
-
-watch(dialog, (val) => {
-  if (!val) {
-    form.value = {
-      name: '',
-      type: '',
-      duration: 0,
-      date: '',
-    }
-  }
-})
+const editingWorkout = ref<WorkoutEntry | null>(null)
 
 const form = ref({
   name: '',
@@ -118,7 +103,19 @@ const form = ref({
 
 const workouts = ref<WorkoutEntry[]>([])
 
-let nextId = 1 // Simple incremental ID
+onMounted(async () => {
+  const querySnapshot = await getDocs(collection(db, 'workouts'))
+  workouts.value = querySnapshot.docs.map(
+    (docSnap) => ({ id: docSnap.id, ...docSnap.data() }) as WorkoutEntry,
+  )
+})
+
+watch(dialog, (val) => {
+  if (!val) {
+    form.value = { name: '', type: '', duration: 0, date: '' }
+    editingWorkout.value = null
+  }
+})
 
 async function saveWorkout() {
   if (!form.value.name || !form.value.type || !form.value.date) {
@@ -126,23 +123,57 @@ async function saveWorkout() {
     return
   }
 
-  const newWorkout = {
-    name: form.value.name,
-    type: form.value.type,
-    duration: form.value.duration,
-    date: form.value.date,
-    createdAt: new Date().toISOString(),
-  }
+  if (editingWorkout.value) {
+    // update existing workout
+    try {
+      const workoutRef = doc(db, 'workouts', editingWorkout.value.id)
+      await updateDoc(workoutRef, { ...form.value })
+      const index = workouts.value.findIndex((w) => w.id === editingWorkout.value!.id)
+      workouts.value[index] = { ...workouts.value[index], ...form.value }
+      showSnackbar('Workout updated!', 'success')
+      dialog.value = false
+    } catch (err) {
+      console.error(err)
+      showSnackbar('Error updating workout.', 'error')
+    }
+  } else {
+    // create new workout
+    const newWorkout = {
+      name: form.value.name,
+      type: form.value.type,
+      duration: form.value.duration,
+      date: form.value.date,
+      createdAt: new Date().toISOString(),
+    }
 
+    try {
+      const docRef = await addDoc(collection(db, 'workouts'), newWorkout)
+      workouts.value.unshift({ ...newWorkout, id: docRef.id })
+      dialog.value = false
+      showSnackbar('Workout saved!', 'success')
+    } catch (err) {
+      console.error(err)
+      showSnackbar('Error saving workout.', 'error')
+    }
+  }
+}
+
+// Called when clicking edit
+function editWorkout(workout: WorkoutEntry) {
+  editingWorkout.value = workout
+  form.value = { ...workout }
+  dialog.value = true
+}
+
+// Called when clicking delete
+async function deleteWorkout(id: string) {
   try {
-    await addDoc(collection(db, 'workouts'), newWorkout)
-    workouts.value.unshift({ ...newWorkout, id: Date.now() })
-    dialog.value = false
-    showSnackbar('Workout saved to Firebase!', 'success')
-    form.value = { name: '', type: '', duration: 0, date: '' }
+    await deleteDoc(doc(db, 'workouts', id))
+    workouts.value = workouts.value.filter((w) => w.id !== id)
+    showSnackbar('Workout deleted!', 'success')
   } catch (err) {
-    showSnackbar('Error saving workout.', 'error')
     console.error(err)
+    showSnackbar('Error deleting workout.', 'error')
   }
 }
 </script>
@@ -158,24 +189,11 @@ async function saveWorkout() {
   flex-shrink: 0;
 }
 
-.workout-text {
-  display: flex;
-  flex-direction: column;
-}
-
 .section-title {
   text-align: center;
   padding: 5px;
   font-size: 2rem;
   background: linear-gradient(90deg, #ff758c, #ff7eb3);
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 .workout-app {
@@ -194,11 +212,6 @@ async function saveWorkout() {
 .v-btn {
   font-weight: bold;
   letter-spacing: 1px;
-}
-
-.v-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 25px rgba(108, 99, 255, 0.6);
 }
 
 .v-card {
@@ -233,5 +246,18 @@ async function saveWorkout() {
 .workout-subtitle {
   font-size: 0.9rem;
   color: #aaa;
+}
+
+.workout-card {
+  border-left: 5px solid #6c63ff;
+  border-radius: 12px;
+  padding: 8px;
+  transition: transform 0.2s ease;
+}
+
+.workout-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
 }
 </style>

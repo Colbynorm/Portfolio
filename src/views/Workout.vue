@@ -15,7 +15,7 @@
             <div class="workout-item">
               <v-icon :icon="getWorkoutIcon(workout.type)" size="28" class="workout-icon" />
               <div class="workout-text">
-                <div class="workout-title">{{ workout.name }} 💪</div>
+                <div class="workout-title">{{ workout.name }}</div>
                 <div class="workout-subtitle">
                   {{ workout.type }} – {{ workout.duration }} min on
                   {{ new Date(workout.date).toLocaleString() }}
@@ -164,10 +164,10 @@ async function saveWorkout() {
 }
 
 .section-title {
-  font-size: 1.6rem;
-  font-weight: bold;
+  text-align: center;
+  padding: 5px;
+  font-size: 2rem;
   background: linear-gradient(90deg, #ff758c, #ff7eb3);
-  -webkit-text-fill-color: transparent;
 }
 .fade-enter-active,
 .fade-leave-active {

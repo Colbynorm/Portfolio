@@ -28,7 +28,7 @@
 
       <v-dialog v-model="dialog" max-width="500px" persistent>
         <v-card>
-          <v-card-title>Add/Edit Workout</v-card-title>
+          <v-card-title>Add Workout</v-card-title>
           <v-card-text>
             <v-text-field v-model="form.name" label="Exercise Name" />
             <v-select
@@ -207,10 +207,10 @@ async function saveWorkout() {
 }
 
 .v-card-title {
-  font-weight: bold;
-  font-size: 1.3rem;
+  text-align: center;
+  padding: 5px;
+  font-size: 2rem;
   background: linear-gradient(90deg, #6c63ff, #a044ff);
-  -webkit-text-fill-color: transparent;
 }
 
 .workout-text {

@@ -2,6 +2,7 @@
   <div class="workout-app">
     <v-container>
       <v-btn color="primary" @click="dialog = true">+ Add Workout</v-btn>
+
       <v-list>
         <h2 class="section-title">My Workouts</h2>
 
@@ -12,8 +13,13 @@
               <div class="workout-text">
                 <div class="workout-title">{{ workout.name }}</div>
                 <div class="workout-subtitle">
-                  {{ workout.type }} – {{ workout.duration }} min on
-                  {{ new Date(workout.date).toLocaleString() }}
+                  {{ workout.type }} – {{ workout.duration }} min
+                  <span v-if="workout.type === 'Strength' && workout.weight">
+                    • {{ workout.weight }} lbs</span
+                  >
+                  <span v-if="workout.type === 'Cardio' && workout.notes">
+                    • "{{ workout.notes }}"</span
+                  >
                 </div>
               </div>
               <div class="workout-actions">
@@ -29,19 +35,35 @@
         </transition-group>
       </v-list>
 
+      <!-- Dialog -->
       <v-dialog v-model="dialog" max-width="500px" persistent>
         <v-card>
           <v-card-title>Add Workout</v-card-title>
           <v-card-text>
             <v-text-field v-model="form.name" label="Exercise Name" />
-            <v-select
-              v-model="form.type"
-              :items="['Cardio', 'Strength', 'Mobility']"
-              label="Type"
-            />
+
+            <v-select v-model="form.type" :items="['Cardio', 'Strength']" label="Type" />
+
             <v-text-field v-model="form.duration" type="number" label="Duration (min)" />
-            <v-text-field v-model="form.date" label="Date/Time" type="datetime-local" />
+
+            <!-- Show weight input for Strength workouts -->
+            <v-text-field
+              v-if="form.type === 'Strength'"
+              v-model="form.weight"
+              type="number"
+              label="Weight Used (lbs)"
+            />
+
+            <!-- Show notes input for Cardio workouts -->
+            <v-textarea
+              v-if="form.type === 'Cardio'"
+              v-model="form.notes"
+              label="Notes"
+              auto-grow
+              rows="2"
+            />
           </v-card-text>
+
           <v-card-actions>
             <v-spacer />
             <v-btn color="green" @click="saveWorkout">Save</v-btn>
@@ -50,6 +72,7 @@
         </v-card>
       </v-dialog>
     </v-container>
+
     <Snackbar v-model="snackbarVisible" :message="snackbarMessage" :color="snackbarColor" />
   </div>
 </template>
@@ -60,19 +83,19 @@ import Snackbar from '@/components/Snackbar.vue'
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '@/firebase'
 
+// 🔥 Dynamic icon selector
 function getWorkoutIcon(type: string): string {
   switch (type.toLowerCase()) {
     case 'cardio':
       return 'mdi-run-fast'
     case 'strength':
       return 'mdi-dumbbell'
-    case 'mobility':
-      return 'mdi-yoga'
     default:
       return 'mdi-help-circle-outline'
   }
 }
 
+// Snackbar logic
 const snackbarVisible = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref<'success' | 'error' | 'info' | 'warning'>('info')
@@ -83,12 +106,14 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' | 'wa
   snackbarColor.value = color
 }
 
+// Workout interface
 interface WorkoutEntry {
   id: string
   name: string
   type: string
   duration: number
-  date: string
+  weight?: number
+  notes?: string
 }
 
 const dialog = ref(false)
@@ -98,11 +123,13 @@ const form = ref({
   name: '',
   type: '',
   duration: 0,
-  date: '',
+  weight: undefined as number | undefined,
+  notes: '',
 })
 
 const workouts = ref<WorkoutEntry[]>([])
 
+// Load workouts
 onMounted(async () => {
   const querySnapshot = await getDocs(collection(db, 'workouts'))
   workouts.value = querySnapshot.docs.map(
@@ -110,62 +137,49 @@ onMounted(async () => {
   )
 })
 
+// Reset form when dialog closes
 watch(dialog, (val) => {
   if (!val) {
-    form.value = { name: '', type: '', duration: 0, date: '' }
+    form.value = { name: '', type: '', duration: 0, weight: undefined, notes: '' }
     editingWorkout.value = null
   }
 })
 
+// Save workout (add or update)
 async function saveWorkout() {
-  if (!form.value.name || !form.value.type || !form.value.date) {
+  if (!form.value.name || !form.value.type) {
     showSnackbar('Please fill in all required fields.', 'error')
     return
   }
 
-  if (editingWorkout.value) {
-    // update existing workout
-    try {
+  try {
+    if (editingWorkout.value) {
       const workoutRef = doc(db, 'workouts', editingWorkout.value.id)
       await updateDoc(workoutRef, { ...form.value })
       const index = workouts.value.findIndex((w) => w.id === editingWorkout.value!.id)
       workouts.value[index] = { ...workouts.value[index], ...form.value }
       showSnackbar('Workout updated!', 'success')
-      dialog.value = false
-    } catch (err) {
-      console.error(err)
-      showSnackbar('Error updating workout.', 'error')
-    }
-  } else {
-    // create new workout
-    const newWorkout = {
-      name: form.value.name,
-      type: form.value.type,
-      duration: form.value.duration,
-      date: form.value.date,
-      createdAt: new Date().toISOString(),
-    }
-
-    try {
+    } else {
+      const newWorkout = { ...form.value, createdAt: new Date().toISOString() }
       const docRef = await addDoc(collection(db, 'workouts'), newWorkout)
       workouts.value.unshift({ ...newWorkout, id: docRef.id })
-      dialog.value = false
       showSnackbar('Workout saved!', 'success')
-    } catch (err) {
-      console.error(err)
-      showSnackbar('Error saving workout.', 'error')
     }
+    dialog.value = false
+  } catch (err) {
+    console.error(err)
+    showSnackbar('Error saving workout.', 'error')
   }
 }
 
-// Called when clicking edit
+// Edit existing workout
 function editWorkout(workout: WorkoutEntry) {
   editingWorkout.value = workout
-  form.value = { ...workout }
+  form.value = { ...workout } as any
   dialog.value = true
 }
 
-// Called when clicking delete
+// Delete workout
 async function deleteWorkout(id: string) {
   try {
     await deleteDoc(doc(db, 'workouts', id))
@@ -182,7 +196,7 @@ async function deleteWorkout(id: string) {
 .workout-item {
   display: flex;
   align-items: center;
-  gap: 12px; /* space between icon and text */
+  gap: 12px;
 }
 
 .workout-icon {
@@ -194,6 +208,8 @@ async function deleteWorkout(id: string) {
   padding: 5px;
   font-size: 2rem;
   background: linear-gradient(90deg, #ff758c, #ff7eb3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .workout-app {
@@ -224,6 +240,7 @@ async function deleteWorkout(id: string) {
   padding: 5px;
   font-size: 2rem;
   background: linear-gradient(90deg, #6c63ff, #a044ff);
+  -webkit-text-fill-color: transparent;
 }
 
 .workout-text {
@@ -231,11 +248,6 @@ async function deleteWorkout(id: string) {
   flex-direction: column;
   padding-left: 16px;
   border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-.v-list-item:hover .workout-text {
-  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .workout-title {
@@ -252,7 +264,6 @@ async function deleteWorkout(id: string) {
   border-left: 5px solid #6c63ff;
   border-radius: 12px;
   padding: 8px;
-  transition: transform 0.2s ease;
 }
 
 .workout-actions {

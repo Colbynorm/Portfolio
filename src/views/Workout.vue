@@ -208,7 +208,6 @@ async function deleteWorkout(id: string) {
   padding: 5px;
   font-size: 2rem;
   background: linear-gradient(90deg, #ff758c, #ff7eb3);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 

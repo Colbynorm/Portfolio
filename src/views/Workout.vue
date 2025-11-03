@@ -272,9 +272,6 @@ function getWorkoutIcon(type: string): string {
 </script>
 
 <style scoped>
-div.v-list-item__content {
-  overflow: visible !important;
-}
 .auth-section {
   display: flex;
   justify-content: center;

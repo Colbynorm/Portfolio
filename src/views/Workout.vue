@@ -8,9 +8,6 @@
         </v-btn>
 
         <div v-else class="user-info">
-          <v-avatar size="40">
-            <img :src="user.photoURL || 'https://i.imgur.com/6VBx3io.png'" alt="User" />
-          </v-avatar>
           <span class="user-name">{{ user.displayName }}</span>
           <v-btn color="red" @click="logout" size="small">Logout</v-btn>
         </div>
@@ -173,6 +170,11 @@ async function loadUserWorkouts() {
   workouts.value = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as WorkoutEntry)
 }
 
+// 💡 Helper to remove undefined fields
+function cleanObject<T extends Record<string, any>>(obj: T): T {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined)) as T
+}
+
 // 💾 Save workout
 async function saveWorkout() {
   if (!form.value.name || !form.value.type) {
@@ -186,17 +188,21 @@ async function saveWorkout() {
 
   try {
     if (editingWorkout.value) {
+      console.log('editing workout')
       const workoutRef = doc(db, 'workouts', editingWorkout.value.id)
-      await updateDoc(workoutRef, { ...form.value })
+      const cleanedForm = cleanObject(form.value)
+      await updateDoc(workoutRef, cleanedForm)
       const index = workouts.value.findIndex((w) => w.id === editingWorkout.value!.id)
-      workouts.value[index] = { ...workouts.value[index], ...form.value }
+      workouts.value[index] = { ...workouts.value[index], ...cleanedForm }
       showSnackbar('Workout updated!', 'success')
     } else {
-      const newWorkout = {
+      console.log('new workout')
+      const newWorkout = cleanObject({
         ...form.value,
         createdAt: new Date().toISOString(),
         userId: user.value.uid,
-      }
+      })
+      console.log(newWorkout)
       const docRef = await addDoc(collection(db, 'workouts'), newWorkout)
       workouts.value.unshift({ ...newWorkout, id: docRef.id })
       showSnackbar('Workout saved!', 'success')

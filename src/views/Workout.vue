@@ -42,7 +42,7 @@
                   </div>
                 </div>
                 <div class="workout-actions">
-                  <v-btn icon @click="editWorkout(workout)">
+                  <v-btn icon color="green" @click="editWorkout(workout)">
                     <v-icon icon="mdi-pencil" />
                   </v-btn>
                   <v-btn icon color="red" @click="deleteWorkout(workout.id)">

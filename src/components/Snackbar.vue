@@ -5,19 +5,13 @@
       class="snackbar text-white px-4 py-3 rounded-lg shadow-lg z-50"
       :style="{ backgroundColor: bgColor }"
     >
-      <span v-if="props.color === 'success'"></span>
-      <span v-else-if="props.color === 'error'"></span>
-      <span v-else-if="props.color === 'warning'"></span>
-      <span v-else></span>
       <span>{{ message }}</span>
-
-      <v-btn variant="text" @click="closeSnackbar" icon="mdi-close"></v-btn>
     </div>
   </transition>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -26,21 +20,28 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits(['update:modelValue'])
-
 const visible = ref(props.modelValue)
+let timeoutId: number | null = null
 
 watch(
   () => props.modelValue,
   (newVal) => {
     visible.value = newVal
+    if (newVal) startTimeout()
   },
 )
 
 const closeSnackbar = () => {
-  console.log(visible.value)
   visible.value = false
   emit('update:modelValue', false)
-  console.log(visible.value)
+  if (timeoutId) clearTimeout(timeoutId)
+}
+
+const startTimeout = () => {
+  if (timeoutId) clearTimeout(timeoutId)
+  timeoutId = window.setTimeout(() => {
+    closeSnackbar()
+  }, 5000) // ⏱️ auto closes after 5 seconds
 }
 
 const bgColor = computed(() => {
@@ -71,5 +72,7 @@ const bgColor = computed(() => {
   z-index: 9999;
   font-weight: 600;
   font-size: 0.95rem;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>

@@ -155,6 +155,7 @@ const user = ref<User | null>(null)
 
 onAuthStateChanged(auth, async (currentUser) => {
   user.value = currentUser
+  console.log(user.value)
   if (user.value) {
     await loadUserWorkouts()
   } else {
@@ -164,10 +165,12 @@ onAuthStateChanged(auth, async (currentUser) => {
 
 // 🧠 Load user-specific workouts
 async function loadUserWorkouts() {
+  console.log(user.value)
   if (!user.value) return
   const q = query(collection(db, 'workouts'), where('userId', '==', user.value.uid))
   const snapshot = await getDocs(q)
   workouts.value = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as WorkoutEntry)
+  console.log(workouts.value)
 }
 
 // 💡 Helper to remove undefined fields

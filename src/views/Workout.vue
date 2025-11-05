@@ -139,25 +139,35 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' | 'wa
   snackbarColor.value = color
 }
 
+onMounted(async () => {
+  const result = await getRedirectResult(auth)
+  if (result?.user) {
+    showSnackbar(`Welcome back, ${result.user.displayName}!`, 'success')
+  }
+})
+
 const signingIn = ref(false)
-const provider = new GoogleAuthProvider()
 
 const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider()
   signingIn.value = true
 
   try {
+    console.log('here')
     if (import.meta.env.PROD) {
+      console.log('PROD')
       // 🏭 Use redirect in production to avoid COOP/CSP issues
       await signInWithRedirect(auth, provider)
       // getRedirectResult will auto-resolve when returning to the page
       const result = await getRedirectResult(auth)
+      console.log(result)
       if (result?.user) {
         showSnackbar(`Welcome back, ${result.user.displayName}!`, 'success')
       }
     } else {
       // 🧪 Popup mode for local dev (less strict)
       const result = await signInWithPopup(auth, provider)
+      console.log(result)
       if (result.user) {
         showSnackbar(`Welcome, ${result.user.displayName}!`, 'success')
       }

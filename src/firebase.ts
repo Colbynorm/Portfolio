@@ -1,14 +1,10 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app'
-import { getAnalytics } from 'firebase/analytics'
+import { getAnalytics, isSupported } from 'firebase/analytics'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: 'AIzaSyDH7GLv3ES7_g7ErrdrGKJ3dn2WU6fzT2g',
   authDomain: 'portfolio-workout-tracker.firebaseapp.com',
@@ -19,9 +15,19 @@ const firebaseConfig = {
   measurementId: 'G-Z21MWHJP60',
 }
 
-// Initialize Firebase
+// ✅ Initialize Firebase *first*
 const app = initializeApp(firebaseConfig)
-const analytics = getAnalytics(app)
 
+// ✅ Then safely try to enable Analytics
+isSupported().then((yes) => {
+  if (yes) {
+    const analytics = getAnalytics(app)
+    console.log('🔥 Analytics enabled')
+  } else {
+    console.warn('⚠️ Analytics not supported in this environment')
+  }
+})
+
+// ✅ Export Firestore + Auth
 export const db = getFirestore(app)
 export const auth = getAuth(app)

@@ -21,10 +21,10 @@ const app = initializeApp(firebaseConfig)
 // ✅ Then safely try to enable Analytics
 isSupported().then((yes) => {
   if (yes) {
-    const analytics = getAnalytics(app)
+    getAnalytics(app)
     console.log('🔥 Analytics enabled')
   } else {
-    console.warn('⚠️ Analytics not supported in this environment')
+    // console.warn('⚠️ Analytics not supported in this environment')
   }
 })
 

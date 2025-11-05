@@ -111,6 +111,8 @@ import {
   signOut,
   onAuthStateChanged,
   User,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth'
 import { db, auth } from '@/firebase'
 import Snackbar from '@/components/Snackbar.vue'
@@ -138,18 +140,35 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' | 'wa
 }
 
 const signingIn = ref(false)
+const provider = new GoogleAuthProvider()
 
 const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider()
   signingIn.value = true
+
   try {
-    const provider = new GoogleAuthProvider()
-    await signInWithPopup(auth, provider)
-    console.log('✅ Signed in!')
+    if (import.meta.env.PROD) {
+      // 🏭 Use redirect in production to avoid COOP/CSP issues
+      await signInWithRedirect(auth, provider)
+      // getRedirectResult will auto-resolve when returning to the page
+      const result = await getRedirectResult(auth)
+      if (result?.user) {
+        showSnackbar(`Welcome back, ${result.user.displayName}!`, 'success')
+      }
+    } else {
+      // 🧪 Popup mode for local dev (less strict)
+      const result = await signInWithPopup(auth, provider)
+      if (result.user) {
+        showSnackbar(`Welcome, ${result.user.displayName}!`, 'success')
+      }
+    }
   } catch (error: any) {
     if (error.code === 'auth/popup-closed-by-user') {
       console.log('Popup closed by user 😅')
+      showSnackbar('Sign-in cancelled.', 'warning')
     } else {
-      console.error('Sign-in error:', error)
+      console.error('Firebase Auth Error:', error)
+      showSnackbar('Sign-in failed. Try again later.', 'error')
     }
   } finally {
     signingIn.value = false

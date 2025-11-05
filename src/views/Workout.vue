@@ -3,7 +3,7 @@
     <v-container>
       <!-- 🔐 Login Section -->
       <div class="auth-section">
-        <v-btn v-if="!user" color="primary" @click="signInWithGoogle">
+        <v-btn v-if="!user" :loading="signingIn" color="primary" @click="signInWithGoogle">
           <v-icon start>mdi-google</v-icon> Sign in with Google
         </v-btn>
 
@@ -137,6 +137,25 @@ function showSnackbar(message: string, color: 'success' | 'error' | 'info' | 'wa
   snackbarColor.value = color
 }
 
+const signingIn = ref(false)
+
+const signInWithGoogle = async () => {
+  signingIn.value = true
+  try {
+    const provider = new GoogleAuthProvider()
+    await signInWithPopup(auth, provider)
+    console.log('✅ Signed in!')
+  } catch (error: any) {
+    if (error.code === 'auth/popup-closed-by-user') {
+      console.log('Popup closed by user 😅')
+    } else {
+      console.error('Sign-in error:', error)
+    }
+  } finally {
+    signingIn.value = false
+  }
+}
+
 // 🔥 Workout logic
 const dialog = ref(false)
 const editingWorkout = ref<WorkoutEntry | null>(null)
@@ -233,18 +252,6 @@ async function deleteWorkout(id: string) {
   } catch (err) {
     console.error(err)
     showSnackbar('Error deleting workout.', 'error')
-  }
-}
-
-// 🔐 Auth functions
-async function signInWithGoogle() {
-  const provider = new GoogleAuthProvider()
-  try {
-    await signInWithPopup(auth, provider)
-    showSnackbar('Signed in successfully!', 'success')
-  } catch (err) {
-    console.error(err)
-    showSnackbar('Failed to sign in.', 'error')
   }
 }
 
